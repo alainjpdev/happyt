@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Users, Calendar, FileText, Plus, BookOpen, TrendingUp } from 'lucide-react';
+import { Users, Calendar, FileText, Plus, BookOpen, TrendingUp, Clock } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useAuthStore } from '../../store/authStore';
+import { apiClient } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
 // import { useTranslation } from 'react-i18next';
 
 export const TeacherDashboard: React.FC = () => {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   // const { t } = useTranslation();
 
   // Estados para datos reales
@@ -14,69 +17,69 @@ export const TeacherDashboard: React.FC = () => {
   const [pendingAssignments, setPendingAssignments] = useState<any[]>([]);
   // Elimina el array dummy de recentStudents y usa estado
   const [recentStudents, setRecentStudents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Obtener clases y filtrar por profesor (user.id)
-    fetch(`${import.meta.env.VITE_API_URL}/api/classes`)
-      .then(res => res.json())
-      .then(data => {
-        if (user?.id) {
-          setMyClasses(data.filter((cls: any) => cls.teacherId === user.id));
-        } else {
-          setMyClasses(data);
+    if (!user) return;
+    
+    const loadTeacherData = async () => {
+      try {
+        setLoading(true);
+        
+        // Cargar datos en paralelo
+        const [classesRes, assignmentsRes] = await Promise.all([
+          apiClient.get('/api/classes'),
+          apiClient.get('/api/assignments')
+        ]);
+        
+        // Filtrar clases del profesor
+        const allClasses = classesRes.data || [];
+        const teacherClasses = allClasses.filter((cls: any) => cls.teacherId === user.id);
+        setMyClasses(teacherClasses);
+        
+        // Filtrar tareas del profesor
+        const allAssignments = assignmentsRes.data || [];
+        const teacherAssignments = allAssignments.filter((a: any) => a.teacherId === user.id);
+        setPendingAssignments(teacherAssignments);
+        
+      } catch (error: any) {
+        console.error('Error loading teacher data:', error);
+        
+        // Si es error 403, redirigir a página de no autorizado
+        if (error.response?.status === 403) {
+          navigate('/unauthorized');
+          return;
         }
-      });
-    // Obtener tareas y filtrar por profesor (user.id)
-    fetch(`${import.meta.env.VITE_API_URL}/api/assignments`)
-      .then(res => res.json())
-      .then(data => {
-        if (user?.id) {
-          setPendingAssignments(data.filter((a: any) => a.teacherId === user.id));
-        } else {
-          setPendingAssignments(data);
-        }
-      });
-  }, [user?.id]);
+        
+        // En caso de otros errores, mostrar arrays vacíos
+        setMyClasses([]);
+        setPendingAssignments([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadTeacherData();
+  }, [user, navigate]);
 
-  useEffect(() => {
-    // Obtener clases del profesor
-    fetch(`${import.meta.env.VITE_API_URL}/api/classes`)
-      .then(res => res.json())
-      .then(classesData => {
-        if (user?.id) {
-          const myClasses = classesData.filter((cls: any) => cls.teacherId === user.id);
-          const myClassIds = myClasses.map((cls: any) => cls.id);
-
-          // Obtener inscripciones de estudiantes en mis clases
-          fetch(`${import.meta.env.VITE_API_URL}/api/studentclasses`)
-            .then(res => res.json())
-            .then(studentClassesData => {
-              // Filtrar inscripciones solo de mis clases
-              const myStudentClasses = studentClassesData.filter((sc: any) =>
-                myClassIds.includes(sc.classId)
-              );
-              // Mapear a estudiantes únicos
-              const studentsMap: { [id: string]: any } = {};
-              myStudentClasses.forEach((sc: any) => {
-                if (!studentsMap[sc.student.id]) {
-                  studentsMap[sc.student.id] = {
-                    id: sc.student.id,
-                    name: sc.student.firstName + ' ' + sc.student.lastName,
-                    email: sc.student.email,
-                    joinDate: sc.joinedAt,
-                    progress: 0 // Puedes calcular progreso real si tienes ese dato
-                  };
-                }
-              });
-              // Tomar los más recientes (por fecha de inscripción)
-              const recent = Object.values(studentsMap)
-                .sort((a: any, b: any) => new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime())
-                .slice(0, 4);
-              setRecentStudents(recent);
-            });
-        }
-      });
-  }, [user?.id]);
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="h-8 bg-gray-200 rounded w-64 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-48"></div>
+          </div>
+          <div className="h-10 bg-gray-200 rounded w-32"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -127,47 +130,120 @@ export const TeacherDashboard: React.FC = () => {
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-text">Mis Clases</h2>
-              <Button variant="outline" size="sm">Ver Todas</Button>
+              <h2 className="text-xl font-bold text-brand-brown">Mis Clases</h2>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.location.href = '/dashboard/classes'}
+                className="border-brand-green-medium text-brand-green-medium hover:bg-brand-green-light"
+              >
+                Ver Todas
+              </Button>
             </div>
             <div className="space-y-4">
-              {myClasses.map((cls) => (
-                <div key={cls.id} className="p-4 border border-gray-200 rounded-lg hover:shadow-sm transition-shadow">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-text">{cls.title}</h3>
-                    <span className="text-sm text-gray-500">
-                      {cls.students || 0} / {cls.maxStudents || 0} estudiantes
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-gray-600 text-sm">Horario: {cls.schedule || 'No definido'}</p>
-                    <span className="text-sm font-medium text-green-600">Próxima clase: {cls.nextClass || 'No programada'}</span>
-                  </div>
-                  {/* Student Progress Bar */}
-                  <div className="mb-3">
-                    <div className="flex items-center justify-between text-sm mb-1">
-                      <span className="text-gray-600">Ocupación</span>
-                      <span className="font-medium text-gray-900 dark:text-gray-100">
-                        {Math.round((cls.students / cls.maxStudents) * 100)}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-green-600 h-2 rounded-full transition-all duration-300" 
-                        style={{ width: `${(cls.students / cls.maxStudents) * 100}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button size="sm" className="flex-1">
-                      Ver Detalle
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      Gestionar
-                    </Button>
-                  </div>
+              {myClasses.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>No tienes clases asignadas aún</p>
+                  <p className="text-sm">Contacta al administrador para obtener clases</p>
                 </div>
-              ))}
+              ) : (
+                myClasses.map((cls) => {
+                  const occupancyPercentage = cls.maxStudents ? Math.round(((cls.students || 0) / cls.maxStudents) * 100) : 0;
+                  const isFull = occupancyPercentage >= 100;
+                  const isAlmostFull = occupancyPercentage >= 80;
+                  
+                  return (
+                    <div key={cls.id} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-all duration-200 bg-white">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="font-semibold text-brand-brown text-lg">{cls.title}</h3>
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            isFull ? 'bg-red-100 text-red-800' : 
+                            isAlmostFull ? 'bg-yellow-100 text-yellow-800' : 
+                            'bg-green-100 text-green-800'
+                          }`}>
+                            {isFull ? 'Llena' : isAlmostFull ? 'Casi llena' : 'Disponible'}
+                          </span>
+                          <span className="text-sm text-gray-500">
+                            {cls.students || 0} / {cls.maxStudents || '∞'} estudiantes
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                        <div className="flex items-center space-x-2">
+                          <Calendar className="w-4 h-4 text-brand-green-medium" />
+                          <span className="text-sm text-gray-600">
+                            Horario: {cls.schedule || 'No definido'}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Clock className="w-4 h-4 text-brand-green-medium" />
+                          <span className="text-sm text-gray-600">
+                            Próxima: {cls.nextClass || 'No programada'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Barra de ocupación mejorada */}
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between text-sm mb-2">
+                          <span className="text-gray-600 font-medium">Ocupación de la clase</span>
+                          <span className="font-bold text-brand-brown">
+                            {occupancyPercentage}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div 
+                            className={`h-3 rounded-full transition-all duration-500 ${
+                              isFull ? 'bg-red-500' : 
+                              isAlmostFull ? 'bg-yellow-500' : 
+                              'bg-brand-green-medium'
+                            }`}
+                            style={{ width: `${Math.min(occupancyPercentage, 100)}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      {/* Información adicional */}
+                      <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+                        <div className="flex items-center space-x-2">
+                          <Users className="w-4 h-4 text-brand-green-medium" />
+                          <span className="text-gray-600">
+                            {cls.students || 0} estudiantes inscritos
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <BookOpen className="w-4 h-4 text-brand-green-medium" />
+                          <span className="text-gray-600">
+                            Módulo: {cls.module?.title || 'Sin módulo'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Botones de acción */}
+                      <div className="flex space-x-2">
+                        <Button 
+                          size="sm" 
+                          className="flex-1 bg-brand-green-medium hover:bg-brand-green-dark text-white"
+                          onClick={() => window.location.href = `/dashboard/classes/${cls.id}`}
+                        >
+                          Ver Detalle
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="border-brand-green-medium text-brand-green-medium hover:bg-brand-green-light"
+                          onClick={() => window.location.href = `/dashboard/students?class=${cls.id}`}
+                        >
+                          Gestionar Estudiantes
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </Card>
 
