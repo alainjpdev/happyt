@@ -26,8 +26,8 @@ const Classes: React.FC = () => {
         setLoading(false);
       });
     
-    // Solo cargar usuarios si es admin o teacher
-    if (user?.role === 'admin' || user?.role === 'teacher') {
+    // Solo cargar usuarios si es admin
+    if (user?.role === 'admin') {
       apiClient.get('/api/users')
         .then(res => setUsers(res.data))
         .catch(() => setUserError('No autorizado. Inicia sesión de nuevo.'));
@@ -123,7 +123,7 @@ const Classes: React.FC = () => {
                 <th className="text-left py-3 px-4 font-medium text-text">Título</th>
                 <th className="text-left py-3 px-4 font-medium text-text">Descripción</th>
                 <th className="text-left py-3 px-4 font-medium text-text">Módulo</th>
-                {user?.role === 'admin' || user?.role === 'teacher' ? (
+                {user?.role === 'admin' ? (
                   <>
                     <th className="text-left py-3 px-4 font-medium text-text">Profesor</th>
                     <th className="text-left py-3 px-4 font-medium text-text">Acciones</th>
@@ -136,11 +136,11 @@ const Classes: React.FC = () => {
             </thead>
             <tbody>
               {userError ? (
-                <tr><td colSpan={user?.role === 'student' ? 4 : 5} className="py-6 text-center text-red-600">{userError}</td></tr>
+                <tr><td colSpan={user?.role === 'admin' ? 5 : 4} className="py-6 text-center text-red-600">{userError}</td></tr>
               ) : loading ? (
-                <tr><td colSpan={user?.role === 'student' ? 4 : 5} className="py-6 text-center text-gray-500">{t('loading', 'Cargando...')}</td></tr>
+                <tr><td colSpan={user?.role === 'admin' ? 5 : 4} className="py-6 text-center text-gray-500">{t('loading', 'Cargando...')}</td></tr>
               ) : classes.length === 0 ? (
-                <tr><td colSpan={user?.role === 'student' ? 4 : 5} className="py-6 text-center text-gray-500">{t('adminDashboard.noClasses', 'No hay clases')}</td></tr>
+                <tr><td colSpan={user?.role === 'admin' ? 5 : 4} className="py-6 text-center text-gray-500">{t('adminDashboard.noClasses', 'No hay clases')}</td></tr>
               ) : (
                 classes.map(cls => (
                   <tr key={cls.id} className="border-b border-gray-100 hover:bg-gray-50">
@@ -148,7 +148,7 @@ const Classes: React.FC = () => {
                     <td className="py-3 px-4">{cls.title}</td>
                     <td className="py-3 px-4">{cls.description}</td>
                     <td className="py-3 px-4">{cls.module?.title || '-'}</td>
-                    {user?.role === 'admin' || user?.role === 'teacher' ? (
+                    {user?.role === 'admin' ? (
                       <>
                         <td className="py-3 px-4">
                           {Array.isArray(users) && users.length > 0 ? (
@@ -169,9 +169,7 @@ const Classes: React.FC = () => {
                           )}
                         </td>
                         <td className="py-3 px-4">
-                          {user?.role === 'admin' && (
-                            <Button size="sm" variant="outline" onClick={() => openEditModal(cls)}>Editar</Button>
-                          )}
+                          <Button size="sm" variant="outline" onClick={() => openEditModal(cls)}>Editar</Button>
                         </td>
                       </>
                     ) : (
