@@ -3,11 +3,11 @@ import { Users, Calendar, FileText, Plus, BookOpen, TrendingUp } from 'lucide-re
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useAuthStore } from '../../store/authStore';
-import { useTranslation } from 'react-i18next';
+// import { useTranslation } from 'react-i18next';
 
 export const TeacherDashboard: React.FC = () => {
   const { user } = useAuthStore();
-  const { t } = useTranslation();
+  // const { t } = useTranslation();
 
   // Estados para datos reales
   const [myClasses, setMyClasses] = useState<any[]>([]);
@@ -84,15 +84,15 @@ export const TeacherDashboard: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-text">
-            {t('teacherDashboard.greeting', { name: user?.firstName })}
+            ¡Hola, {user?.firstName}! 👋
           </h1>
           <p className="text-text-secondary mt-1">
-            {t('teacherDashboard.subtitle')}
+            Gestiona tus clases y estudiantes
           </p>
         </div>
         <Button className="flex items-center">
           <Plus className="w-5 h-5 mr-2" />
-          {t('teacherDashboard.newClass')}
+          Nueva Clase
         </Button>
       </div>
 
@@ -101,24 +101,24 @@ export const TeacherDashboard: React.FC = () => {
         <Card className="text-center">
           <Calendar className="w-8 h-8 text-green-600 mx-auto mb-3" />
           <h3 className="text-2xl font-bold text-text">{myClasses.length}</h3>
-          <p className="text-gray-600">{t('teacherDashboard.activeClasses')}</p>
+          <p className="text-gray-600">Clases Activas</p>
         </Card>
         <Card className="text-center">
           <Users className="w-8 h-8 text-blue-600 mx-auto mb-3" />
           <h3 className="text-2xl font-bold text-text">
-            {myClasses.reduce((total, cls) => total + cls.students, 0)}
+            {myClasses.reduce((total, cls) => total + (cls.students || 0), 0)}
           </h3>
-          <p className="text-gray-600">{t('teacherDashboard.totalStudents')}</p>
+          <p className="text-gray-600">Total Estudiantes</p>
         </Card>
         <Card className="text-center">
           <FileText className="w-8 h-8 text-orange-600 mx-auto mb-3" />
           <h3 className="text-2xl font-bold text-text">{pendingAssignments.length}</h3>
-          <p className="text-gray-600">{t('teacherDashboard.pendingAssignments')}</p>
+          <p className="text-gray-600">Tareas Pendientes</p>
         </Card>
         <Card className="text-center">
           <TrendingUp className="w-8 h-8 text-purple-600 mx-auto mb-3" />
           <h3 className="text-2xl font-bold text-text">87%</h3>
-          <p className="text-gray-600">{t('teacherDashboard.avgSatisfaction')}</p>
+          <p className="text-gray-600">Satisfacción Promedio</p>
         </Card>
       </div>
 
@@ -127,8 +127,8 @@ export const TeacherDashboard: React.FC = () => {
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-text">{t('teacherDashboard.myClasses')}</h2>
-              <Button variant="outline" size="sm">{t('teacherDashboard.viewAll')}</Button>
+              <h2 className="text-xl font-bold text-text">Mis Clases</h2>
+              <Button variant="outline" size="sm">Ver Todas</Button>
             </div>
             <div className="space-y-4">
               {myClasses.map((cls) => (
@@ -136,17 +136,17 @@ export const TeacherDashboard: React.FC = () => {
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-semibold text-text">{cls.title}</h3>
                     <span className="text-sm text-gray-500">
-                      {t('teacherDashboard.students', { current: cls.students, max: cls.maxStudents })}
+                      {cls.students || 0} / {cls.maxStudents || 0} estudiantes
                     </span>
                   </div>
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-gray-600 text-sm">{t('teacherDashboard.schedule', { schedule: cls.schedule })}</p>
-                    <span className="text-sm font-medium text-green-600">{t('teacherDashboard.nextClass', { nextClass: cls.nextClass })}</span>
+                    <p className="text-gray-600 text-sm">Horario: {cls.schedule || 'No definido'}</p>
+                    <span className="text-sm font-medium text-green-600">Próxima clase: {cls.nextClass || 'No programada'}</span>
                   </div>
                   {/* Student Progress Bar */}
                   <div className="mb-3">
                     <div className="flex items-center justify-between text-sm mb-1">
-                      <span className="text-gray-600">{t('teacherDashboard.occupation')}</span>
+                      <span className="text-gray-600">Ocupación</span>
                       <span className="font-medium text-gray-900 dark:text-gray-100">
                         {Math.round((cls.students / cls.maxStudents) * 100)}%
                       </span>
@@ -160,10 +160,10 @@ export const TeacherDashboard: React.FC = () => {
                   </div>
                   <div className="flex space-x-2">
                     <Button size="sm" className="flex-1">
-                      {t('teacherDashboard.viewDetail')}
+                      Ver Detalle
                     </Button>
                     <Button size="sm" variant="outline">
-                      {t('teacherDashboard.manage')}
+                      Gestionar
                     </Button>
                   </div>
                 </div>
@@ -174,8 +174,8 @@ export const TeacherDashboard: React.FC = () => {
           {/* Tareas por Revisar */}
           <Card>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-text">{t('teacherDashboard.assignmentsToReview')}</h2>
-              <Button variant="outline" size="sm">{t('teacherDashboard.viewAll')}</Button>
+              <h2 className="text-xl font-bold text-text">Tareas por Revisar</h2>
+              <Button variant="outline" size="sm">Ver Todas</Button>
             </div>
             <div className="space-y-3">
               {pendingAssignments.map((assignment) => (
@@ -183,15 +183,15 @@ export const TeacherDashboard: React.FC = () => {
                   <div>
                     <h3 className="font-medium text-text">{assignment.title}</h3>
                     <p className="text-sm text-gray-600">{assignment.class}</p>
-                    <p className="text-sm text-gray-500">{t('teacherDashboard.due', { date: assignment.dueDate })}</p>
+                    <p className="text-sm text-gray-500">Vence: {assignment.dueDate || 'No definido'}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-semibold text-text">
                       {assignment.submissions}/{assignment.totalStudents}
                     </p>
-                    <p className="text-sm text-gray-600">{t('teacherDashboard.delivered')}</p>
+                    <p className="text-sm text-gray-600">Entregadas</p>
                     <Button size="sm" className="mt-2">
-                      {t('teacherDashboard.review')}
+                      Revisar
                     </Button>
                   </div>
                 </div>
@@ -204,7 +204,7 @@ export const TeacherDashboard: React.FC = () => {
         <div className="space-y-6">
           {/* Estudiantes Recientes */}
           <Card>
-            <h2 className="text-xl font-bold text-text mb-4">{t('teacherDashboard.recentStudents')}</h2>
+            <h2 className="text-xl font-bold text-text mb-4">Estudiantes Recientes</h2>
             <div className="space-y-3">
               {recentStudents.map((student) => (
                 <div key={student.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -216,36 +216,36 @@ export const TeacherDashboard: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900 dark:text-gray-100 text-sm">{student.name}</h3>
-                      <p className="text-xs text-gray-600">{t('teacherDashboard.progress', { progress: student.progress })}</p>
+                      <p className="text-xs text-gray-600">Progreso: {student.progress || 0}%</p>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
             <Button size="sm" variant="outline" className="w-full mt-4">
-              {t('teacherDashboard.viewAllStudents')}
+              Ver Todos los Estudiantes
             </Button>
           </Card>
 
           {/* Acciones Rápidas */}
           <Card>
-            <h2 className="text-xl font-bold text-text mb-4">{t('teacherDashboard.quickActions')}</h2>
+            <h2 className="text-xl font-bold text-text mb-4">Acciones Rápidas</h2>
             <div className="space-y-3">
               <Button size="sm" variant="outline" className="w-full justify-start">
                 <Plus className="w-4 h-4 mr-2" />
-                {t('teacherDashboard.createAssignment')}
+                Crear Tarea
               </Button>
               <Button size="sm" variant="outline" className="w-full justify-start">
                 <FileText className="w-4 h-4 mr-2" />
-                {t('teacherDashboard.uploadMaterial')}
+                Subir Material
               </Button>
               <Button size="sm" variant="outline" className="w-full justify-start">
                 <Users className="w-4 h-4 mr-2" />
-                {t('teacherDashboard.manageStudents')}
+                Gestionar Estudiantes
               </Button>
               <Button size="sm" variant="outline" className="w-full justify-start">
                 <BookOpen className="w-4 h-4 mr-2" />
-                {t('teacherDashboard.createModule')}
+                Crear Módulo
               </Button>
             </div>
           </Card>

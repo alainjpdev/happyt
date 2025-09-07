@@ -57,7 +57,7 @@ export const Landing: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
-              <img src={logohappy} alt="Happy Tribe Logo" className="h-12 w-auto" />
+                    <img src={logohappy} alt="Happy Tribe Logo" className="h-16 w-auto" />
             </div>
             <div className="flex items-center space-x-4">
               <Link 
@@ -79,7 +79,7 @@ export const Landing: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="flex justify-center mb-8">
-              <img src={logohappy} alt="Happy Tribe Logo" className="h-20 w-auto" />
+                    <img src={logohappy} alt="Happy Tribe Logo" className="h-32 w-auto" />
             </div>
             <h1 className="text-5xl font-bold text-brand-brown mb-6">
               Educación del Corazón
@@ -248,7 +248,7 @@ export const Landing: React.FC = () => {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center mb-4">
-                <img src={logohappy} alt="Happy Tribe Logo" className="h-8 w-auto" />
+                      <img src={logohappy} alt="Happy Tribe Logo" className="h-12 w-auto" />
               </div>
               <p className="text-gray-300">
                 Educación del corazón para niños neurodiversos. Transformando vidas a través de la educación personalizada.

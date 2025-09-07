@@ -25,10 +25,14 @@ const Classes: React.FC = () => {
         setClasses(res.data);
         setLoading(false);
       });
-    apiClient.get('/api/users')
-      .then(res => setUsers(res.data))
-      .catch(() => setUserError('No autorizado. Inicia sesión de nuevo.'));
-  }, []);
+    
+    // Solo cargar usuarios si es admin o teacher
+    if (user?.role === 'admin' || user?.role === 'teacher') {
+      apiClient.get('/api/users')
+        .then(res => setUsers(res.data))
+        .catch(() => setUserError('No autorizado. Inicia sesión de nuevo.'));
+    }
+  }, [user?.role]);
 
   const handleTeacherChange = async (classId: string, teacherId: string) => {
     const updatedClasses = classes.map(cls => {
@@ -105,7 +109,7 @@ const Classes: React.FC = () => {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-text mb-6 flex items-center justify-between">
-        {t('adminDashboard.allClasses', 'Todas las Clases')}
+        {user?.role === 'student' ? 'Mis Clases' : t('adminDashboard.allClasses', 'Todas las Clases')}
         {user?.role === 'admin' && (
           <Button size="sm" variant="primary" onClick={openCreateModal}>Agregar Clase</Button>
         )}
@@ -119,18 +123,24 @@ const Classes: React.FC = () => {
                 <th className="text-left py-3 px-4 font-medium text-text">Título</th>
                 <th className="text-left py-3 px-4 font-medium text-text">Descripción</th>
                 <th className="text-left py-3 px-4 font-medium text-text">Módulo</th>
-                <th className="text-left py-3 px-4 font-medium text-text">Profesor</th>
+                {user?.role === 'admin' || user?.role === 'teacher' ? (
+                  <>
+                    <th className="text-left py-3 px-4 font-medium text-text">Profesor</th>
+                    <th className="text-left py-3 px-4 font-medium text-text">Acciones</th>
+                  </>
+                ) : (
+                  <th className="text-left py-3 px-4 font-medium text-text">Profesor</th>
+                )}
                 {/* <th className="text-left py-3 px-4 font-medium text-gray-700">Horario</th> */}
-                <th className="text-left py-3 px-4 font-medium text-text">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {userError ? (
-                <tr><td colSpan={5} className="py-6 text-center text-red-600">{userError}</td></tr>
+                <tr><td colSpan={user?.role === 'student' ? 4 : 5} className="py-6 text-center text-red-600">{userError}</td></tr>
               ) : loading ? (
-                <tr><td colSpan={5} className="py-6 text-center text-gray-500">{t('loading', 'Cargando...')}</td></tr>
+                <tr><td colSpan={user?.role === 'student' ? 4 : 5} className="py-6 text-center text-gray-500">{t('loading', 'Cargando...')}</td></tr>
               ) : classes.length === 0 ? (
-                <tr><td colSpan={5} className="py-6 text-center text-gray-500">{t('adminDashboard.noClasses', 'No hay clases')}</td></tr>
+                <tr><td colSpan={user?.role === 'student' ? 4 : 5} className="py-6 text-center text-gray-500">{t('adminDashboard.noClasses', 'No hay clases')}</td></tr>
               ) : (
                 classes.map(cls => (
                   <tr key={cls.id} className="border-b border-gray-100 hover:bg-gray-50">
@@ -138,30 +148,38 @@ const Classes: React.FC = () => {
                     <td className="py-3 px-4">{cls.title}</td>
                     <td className="py-3 px-4">{cls.description}</td>
                     <td className="py-3 px-4">{cls.module?.title || '-'}</td>
-                    <td className="py-3 px-4">
-                      {Array.isArray(users) && users.length > 0 ? (
-                        <select
-                          value={cls.teacherId || ''}
-                          onChange={e => handleTeacherChange(cls.id, e.target.value)}
-                          className="border rounded px-2 py-1"
-                        >
-                          <option value="">Sin asignar</option>
-                          {users.filter(u => u.role === 'teacher').map(teacher => (
-                            <option key={teacher.id} value={teacher.id}>
-                              {teacher.firstName} {teacher.lastName}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span className="text-gray-400">No hay profesores</span>
-                      )}
-                    </td>
+                    {user?.role === 'admin' || user?.role === 'teacher' ? (
+                      <>
+                        <td className="py-3 px-4">
+                          {Array.isArray(users) && users.length > 0 ? (
+                            <select
+                              value={cls.teacherId || ''}
+                              onChange={e => handleTeacherChange(cls.id, e.target.value)}
+                              className="border rounded px-2 py-1"
+                            >
+                              <option value="">Sin asignar</option>
+                              {users.filter(u => u.role === 'teacher').map(teacher => (
+                                <option key={teacher.id} value={teacher.id}>
+                                  {teacher.firstName} {teacher.lastName}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className="text-gray-400">No hay profesores</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">
+                          {user?.role === 'admin' && (
+                            <Button size="sm" variant="outline" onClick={() => openEditModal(cls)}>Editar</Button>
+                          )}
+                        </td>
+                      </>
+                    ) : (
+                      <td className="py-3 px-4">
+                        {cls.teacher ? `${cls.teacher.firstName} ${cls.teacher.lastName}` : 'Sin asignar'}
+                      </td>
+                    )}
                     {/* <td className="py-3 px-4">{cls.schedule}</td> */}
-                    <td className="py-3 px-4">
-                      {user?.role === 'admin' && (
-                        <Button size="sm" variant="outline" onClick={() => openEditModal(cls)}>Editar</Button>
-                      )}
-                    </td>
                   </tr>
                 ))
               )}
