@@ -114,7 +114,7 @@ const App: React.FC = () => {
             <Route 
               path="modules" 
               element={
-                <ProtectedRoute allowedRoles={['student', 'admin']}>
+                <ProtectedRoute allowedRoles={['student', 'teacher', 'admin']}>
                   <Modules />
                 </ProtectedRoute>
               } 
@@ -130,7 +130,7 @@ const App: React.FC = () => {
             <Route 
               path="assignments" 
               element={
-                <ProtectedRoute allowedRoles={['student', 'admin']}>
+                <ProtectedRoute allowedRoles={['student', 'teacher', 'admin']}>
                   <Assignments />
                 </ProtectedRoute>
               } 
@@ -156,6 +156,46 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute allowedRoles={['teacher', 'admin']}>
                   <div className="p-6">Crear Nueva Clase (Próximamente)</div>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="assignments/new" 
+              element={
+                <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                  <div className="p-6">Crear Nueva Tarea (Próximamente)</div>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="assignments/:id" 
+              element={
+                <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                  <div className="p-6">Detalle de Tarea (Próximamente)</div>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="assignments/:id/edit" 
+              element={
+                <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                  <div className="p-6">Editar Tarea (Próximamente)</div>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="assignments/pending" 
+              element={
+                <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                  <div className="p-6">Autorizar Entregas (Próximamente)</div>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="modules/new" 
+              element={
+                <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                  <div className="p-6">Crear Nuevo Módulo (Próximamente)</div>
                 </ProtectedRoute>
               } 
             />

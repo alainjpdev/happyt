@@ -17,6 +17,7 @@ export const TeacherDashboard: React.FC = () => {
   const [pendingAssignments, setPendingAssignments] = useState<any[]>([]);
   // Elimina el array dummy de recentStudents y usa estado
   const [recentStudents, setRecentStudents] = useState<any[]>([]);
+  const [myStudentClasses, setMyStudentClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,9 +28,10 @@ export const TeacherDashboard: React.FC = () => {
         setLoading(true);
         
         // Cargar datos en paralelo
-        const [classesRes, assignmentsRes] = await Promise.all([
+        const [classesRes, assignmentsRes, studentClassesRes] = await Promise.all([
           apiClient.get('/api/classes'),
-          apiClient.get('/api/assignments')
+          apiClient.get('/api/assignments'),
+          apiClient.get('/api/studentclasses')
         ]);
         
         // Filtrar clases del profesor
@@ -41,6 +43,46 @@ export const TeacherDashboard: React.FC = () => {
         const allAssignments = assignmentsRes.data || [];
         const teacherAssignments = allAssignments.filter((a: any) => a.teacherId === user.id);
         setPendingAssignments(teacherAssignments);
+        
+        console.log('All assignments:', allAssignments);
+        console.log('Teacher assignments:', teacherAssignments);
+        
+        // Obtener estudiantes del profesor
+        const allStudentClasses = studentClassesRes.data || [];
+        const myClassIds = teacherClasses.map((cls: any) => cls.id);
+        const filteredStudentClasses = allStudentClasses.filter((sc: any) =>
+          myClassIds.includes(sc.classId)
+        );
+        setMyStudentClasses(filteredStudentClasses);
+        
+        console.log('Teacher classes:', teacherClasses);
+        console.log('All student classes:', allStudentClasses);
+        console.log('My student classes:', filteredStudentClasses);
+        
+        // Mapear a estudiantes únicos
+        const studentsMap: { [id: string]: any } = {};
+        filteredStudentClasses.forEach((sc: any) => {
+          if (sc.student && !studentsMap[sc.student.id]) {
+            studentsMap[sc.student.id] = {
+              id: sc.student.id,
+              name: `${sc.student.firstName} ${sc.student.lastName}`,
+              email: sc.student.email,
+              joinDate: sc.joinedAt,
+              progress: Math.floor(Math.random() * 100), // Simulado por ahora
+              classId: sc.classId
+            };
+          }
+        });
+        
+        console.log('Students map:', studentsMap);
+        
+        // Tomar los más recientes (por fecha de inscripción)
+        const recent = Object.values(studentsMap)
+          .sort((a: any, b: any) => new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime())
+          .slice(0, 5);
+        
+        console.log('Recent students:', recent);
+        setRecentStudents(recent);
         
       } catch (error: any) {
         console.error('Error loading teacher data:', error);
@@ -250,78 +292,272 @@ export const TeacherDashboard: React.FC = () => {
           {/* Tareas por Revisar */}
           <Card>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-text">Tareas por Revisar</h2>
-              <Button variant="outline" size="sm">Ver Todas</Button>
+              <h2 className="text-xl font-bold text-brand-brown">Mis Tareas</h2>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.location.href = '/dashboard/assignments'}
+                className="border-brand-green-medium text-brand-green-medium hover:bg-brand-green-light"
+              >
+                Ver Todas
+              </Button>
             </div>
             <div className="space-y-3">
-              {pendingAssignments.map((assignment) => (
-                <div key={assignment.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                  <div>
-                    <h3 className="font-medium text-text">{assignment.title}</h3>
-                    <p className="text-sm text-gray-600">{assignment.class}</p>
-                    <p className="text-sm text-gray-500">Vence: {assignment.dueDate || 'No definido'}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-semibold text-text">
-                      {assignment.submissions}/{assignment.totalStudents}
-                    </p>
-                    <p className="text-sm text-gray-600">Entregadas</p>
-                    <Button size="sm" className="mt-2">
-                      Revisar
-                    </Button>
-                  </div>
+              {loading ? (
+                <div className="text-center py-6 text-gray-500">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green-medium mx-auto mb-2"></div>
+                  <p className="text-sm">Cargando tareas...</p>
                 </div>
-              ))}
+              ) : pendingAssignments.length === 0 ? (
+                <div className="text-center py-6 text-gray-500">
+                  <FileText className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                  <p className="text-sm">No tienes tareas asignadas aún</p>
+                  <p className="text-xs">Las tareas aparecerán cuando las crees o te las asignen</p>
+                </div>
+              ) : (
+                pendingAssignments.map((assignment) => {
+                  const isOverdue = assignment.dueDate && new Date(assignment.dueDate) < new Date();
+                  const submissionRate = assignment.totalStudents > 0 ? 
+                    Math.round((assignment.submissions || 0) / assignment.totalStudents * 100) : 0;
+                  
+                  return (
+                    <div key={assignment.id} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-all duration-200 bg-white">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-brand-brown text-lg">{assignment.title || 'Tarea sin título'}</h3>
+                          <div className="flex items-center space-x-4 mt-2">
+                            <div className="flex items-center space-x-2">
+                              <Calendar className="w-4 h-4 text-brand-green-medium" />
+                              <span className="text-sm text-gray-600">
+                                Clase: {assignment.class?.title || assignment.className || 'Sin clase'}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Clock className="w-4 h-4 text-brand-green-medium" />
+                              <span className={`text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-gray-600'}`}>
+                                Vence: {assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString() : 'No definido'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {isOverdue && (
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              Vencida
+                            </span>
+                          )}
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            submissionRate >= 80 ? 'bg-green-100 text-green-800' :
+                            submissionRate >= 50 ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {submissionRate}% entregadas
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* Barra de progreso de entregas */}
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between text-sm mb-2">
+                          <span className="text-gray-600 font-medium">Entregas de estudiantes</span>
+                          <span className="font-bold text-brand-brown">
+                            {assignment.submissions || 0} / {assignment.totalStudents || 0}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div 
+                            className={`h-3 rounded-full transition-all duration-500 ${
+                              submissionRate >= 80 ? 'bg-green-500' : 
+                              submissionRate >= 50 ? 'bg-yellow-500' : 
+                              'bg-red-500'
+                            }`}
+                            style={{ width: `${Math.min(submissionRate, 100)}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      {/* Información adicional */}
+                      <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+                        <div className="flex items-center space-x-2">
+                          <FileText className="w-4 h-4 text-brand-green-medium" />
+                          <span className="text-gray-600">
+                            {assignment.submissions || 0} entregas recibidas
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Users className="w-4 h-4 text-brand-green-medium" />
+                          <span className="text-gray-600">
+                            {assignment.totalStudents || 0} estudiantes totales
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Botones de acción */}
+                      <div className="flex space-x-2">
+                        <Button 
+                          size="sm" 
+                          className="flex-1 bg-brand-green-medium hover:bg-brand-green-dark text-white"
+                          onClick={() => window.location.href = `/dashboard/assignments/${assignment.id}`}
+                        >
+                          <FileText className="w-4 h-4 mr-2" />
+                          Revisar Entregas
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="border-brand-green-medium text-brand-green-medium hover:bg-brand-green-light"
+                          onClick={() => window.location.href = `/dashboard/assignments/${assignment.id}/edit`}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Editar
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
+            {pendingAssignments.length > 0 && (
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="w-full mt-4 border-brand-green-medium text-brand-green-medium hover:bg-brand-green-light"
+                onClick={() => window.location.href = '/dashboard/assignments'}
+              >
+                Ver Todas las Tareas
+              </Button>
+            )}
           </Card>
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Estudiantes Recientes */}
+          {/* Mis Estudiantes */}
           <Card>
-            <h2 className="text-xl font-bold text-text mb-4">Estudiantes Recientes</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-brand-brown">Mis Estudiantes</h2>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => window.location.href = '/dashboard/students'}
+                className="border-brand-green-medium text-brand-green-medium hover:bg-brand-green-light"
+              >
+                Ver Todos
+              </Button>
+            </div>
             <div className="space-y-3">
-              {recentStudents.map((student) => (
-                <div key={student.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-blue-600">
-                        {student.name.split(' ').map((n: string) => n[0]).join('')}
-                      </span>
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-gray-900 dark:text-gray-100 text-sm">{student.name}</h3>
-                      <p className="text-xs text-gray-600">Progreso: {student.progress || 0}%</p>
-                    </div>
+              {loading ? (
+                <div className="text-center py-6 text-gray-500">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green-medium mx-auto mb-2"></div>
+                  <p className="text-sm">Cargando estudiantes...</p>
+                </div>
+              ) : recentStudents.length === 0 ? (
+                <div className="text-center py-6 text-gray-500">
+                  <Users className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                  <p className="text-sm">No tienes estudiantes asignados aún</p>
+                  <p className="text-xs">Los estudiantes aparecerán cuando se inscriban a tus clases</p>
+                  <div className="mt-3 text-xs text-gray-400">
+                    <p>Clases del profesor: {myClasses.length}</p>
+                    <p>Total de inscripciones: {myStudentClasses?.length || 0}</p>
                   </div>
                 </div>
-              ))}
+              ) : (
+                recentStudents.map((student) => (
+                  <div key={student.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-brand-green-light rounded-full flex items-center justify-center">
+                        <span className="text-sm font-medium text-brand-green-dark">
+                          {student.name ? student.name.split(' ').map((n: string) => n[0]).join('') : '??'}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-medium text-brand-brown text-sm">
+                          {student.name || 'Estudiante sin nombre'}
+                        </h3>
+                        <p className="text-xs text-gray-600">{student.email || 'Sin email'}</p>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <div className="flex-1 bg-gray-200 rounded-full h-1.5">
+                            <div 
+                              className="bg-brand-green-medium h-1.5 rounded-full transition-all duration-300"
+                              style={{ width: `${student.progress || 0}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-xs text-gray-500">{student.progress || 0}%</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-500">
+                        {student.joinDate ? new Date(student.joinDate).toLocaleDateString() : 'N/A'}
+                      </p>
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Activo
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
-            <Button size="sm" variant="outline" className="w-full mt-4">
-              Ver Todos los Estudiantes
-            </Button>
+            {recentStudents.length > 0 && (
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="w-full mt-4 border-brand-green-medium text-brand-green-medium hover:bg-brand-green-light"
+                onClick={() => window.location.href = '/dashboard/students'}
+              >
+                Ver Todos los Estudiantes
+              </Button>
+            )}
           </Card>
 
           {/* Acciones Rápidas */}
           <Card>
-            <h2 className="text-xl font-bold text-text mb-4">Acciones Rápidas</h2>
+            <h2 className="text-xl font-bold text-brand-brown mb-4">Acciones Rápidas</h2>
             <div className="space-y-3">
-              <Button size="sm" variant="outline" className="w-full justify-start">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="w-full justify-start border-brand-green-medium text-brand-green-medium hover:bg-brand-green-light"
+                onClick={() => window.location.href = '/dashboard/assignments/new'}
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 Crear Tarea
               </Button>
-              <Button size="sm" variant="outline" className="w-full justify-start">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="w-full justify-start border-brand-green-medium text-brand-green-medium hover:bg-brand-green-light"
+                onClick={() => window.location.href = '/dashboard/materials'}
+              >
                 <FileText className="w-4 h-4 mr-2" />
                 Subir Material
               </Button>
-              <Button size="sm" variant="outline" className="w-full justify-start">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="w-full justify-start border-brand-green-medium text-brand-green-medium hover:bg-brand-green-light"
+                onClick={() => window.location.href = '/dashboard/students'}
+              >
                 <Users className="w-4 h-4 mr-2" />
                 Gestionar Estudiantes
               </Button>
-              <Button size="sm" variant="outline" className="w-full justify-start">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="w-full justify-start border-brand-green-medium text-brand-green-medium hover:bg-brand-green-light"
+                onClick={() => window.location.href = '/dashboard/modules/new'}
+              >
                 <BookOpen className="w-4 h-4 mr-2" />
                 Crear Módulo
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="w-full justify-start border-brand-green-medium text-brand-green-medium hover:bg-brand-green-light"
+                onClick={() => window.location.href = '/dashboard/assignments/pending'}
+              >
+                <Clock className="w-4 h-4 mr-2" />
+                Autorizar Entregas
               </Button>
             </div>
           </Card>

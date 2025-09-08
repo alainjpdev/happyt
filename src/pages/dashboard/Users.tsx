@@ -17,14 +17,33 @@ const Users: React.FC = () => {
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [userModules, setUserModules] = useState<string[]>([]);
+  const [userModulesData, setUserModulesData] = useState<{[userId: string]: any[]}>({});
 
   useEffect(() => {
     apiClient.get('/api/users')
       .then(res => {
         setUsers(res.data);
         setLoading(false);
+        // Cargar módulos de cada usuario
+        loadUserModules(res.data);
       });
   }, []);
+
+  const loadUserModules = async (users: any[]) => {
+    const modulesData: {[userId: string]: any[]} = {};
+    
+    for (const user of users) {
+      try {
+        const res = await apiClient.get(`/api/users/${user.id}/modules`);
+        modulesData[user.id] = res.data || [];
+      } catch (error) {
+        console.error(`Error loading modules for user ${user.id}:`, error);
+        modulesData[user.id] = [];
+      }
+    }
+    
+    setUserModulesData(modulesData);
+  };
 
   useEffect(() => {
     if (saveMsg && saveMsg.includes('guardados correctamente')) {
@@ -64,6 +83,8 @@ const Users: React.FC = () => {
     if (!selectedUser) return;
     await apiClient.put(`/api/users/${selectedUser.id}/modules`, { moduleIds: userModules });
     closeAssignModal();
+    // Refrescar los módulos del usuario
+    loadUserModules(users);
   };
 
   const handleDelete = async (userId: string) => {
@@ -75,7 +96,29 @@ const Users: React.FC = () => {
       setUsers(users => users.filter(u => u.id !== userId));
       setSaveMsg('Usuario eliminado correctamente');
     } catch (err: any) {
-      setSaveMsg('Error al eliminar usuario');
+      console.error('Error al eliminar usuario:', err);
+      
+      // Manejar diferentes tipos de errores
+      if (err.response?.status === 400) {
+        const errorMessage = err.response?.data?.message || err.response?.data?.error;
+        if (errorMessage?.includes('módulo') || errorMessage?.includes('module')) {
+          setSaveMsg('No se puede eliminar el usuario porque tiene módulos asociados. Primero desasigna los módulos del usuario.');
+        } else if (errorMessage?.includes('clase') || errorMessage?.includes('class')) {
+          setSaveMsg('No se puede eliminar el usuario porque tiene clases asociadas. Primero desasigna las clases del usuario.');
+        } else if (errorMessage?.includes('tarea') || errorMessage?.includes('assignment')) {
+          setSaveMsg('No se puede eliminar el usuario porque tiene tareas asociadas. Primero desasigna las tareas del usuario.');
+        } else {
+          setSaveMsg(`Error: ${errorMessage || 'No se puede eliminar el usuario debido a restricciones de integridad.'}`);
+        }
+      } else if (err.response?.status === 409) {
+        setSaveMsg('No se puede eliminar el usuario porque tiene datos asociados. Primero desasigna todos los módulos, clases y tareas del usuario.');
+      } else if (err.response?.status === 403) {
+        setSaveMsg('No tienes permisos para eliminar este usuario.');
+      } else if (err.response?.status === 404) {
+        setSaveMsg('El usuario no existe o ya fue eliminado.');
+      } else {
+        setSaveMsg(`Error al eliminar usuario: ${err.response?.data?.message || err.message || 'Error desconocido'}`);
+      }
     } finally {
       setSaving(false);
     }
@@ -109,7 +152,37 @@ const Users: React.FC = () => {
             setSaving(false);
           }
         }}>Guardar cambios</Button>
-        {saveMsg && <span className={saveMsg.includes('Error') ? 'text-error' : 'text-success'}>{saveMsg}</span>}
+        {saveMsg && (
+          <div className={`px-4 py-2 rounded-lg border ${
+            saveMsg.includes('Error') || saveMsg.includes('No se puede') 
+              ? 'bg-red-50 border-red-200 text-red-800' 
+              : 'bg-green-50 border-green-200 text-green-800'
+          }`}>
+            <div className="flex items-center space-x-2">
+              {saveMsg.includes('Error') || saveMsg.includes('No se puede') ? (
+                <span className="text-red-500">⚠️</span>
+              ) : (
+                <span className="text-green-500">✅</span>
+              )}
+              <span className="font-medium">{saveMsg}</span>
+            </div>
+            {saveMsg.includes('módulos asociados') && (
+              <div className="mt-2 text-sm text-red-700">
+                💡 <strong>Solución:</strong> Ve a la gestión de módulos y desasigna los módulos de este usuario antes de eliminarlo.
+              </div>
+            )}
+            {saveMsg.includes('clases asociadas') && (
+              <div className="mt-2 text-sm text-red-700">
+                💡 <strong>Solución:</strong> Ve a la gestión de clases y desasigna las clases de este usuario antes de eliminarlo.
+              </div>
+            )}
+            {saveMsg.includes('tareas asociadas') && (
+              <div className="mt-2 text-sm text-red-700">
+                💡 <strong>Solución:</strong> Ve a la gestión de tareas y desasigna las tareas de este usuario antes de eliminarlo.
+              </div>
+            )}
+          </div>
+        )}
       </div>
       <Card>
         <div className="overflow-x-auto">
@@ -120,6 +193,7 @@ const Users: React.FC = () => {
                 <th className="text-left py-3 px-4 font-medium text-text-secondary">Nombre</th>
                 <th className="text-left py-3 px-4 font-medium text-text-secondary">Email</th>
                 <th className="text-left py-3 px-4 font-medium text-text-secondary">Rol</th>
+                <th className="text-left py-3 px-4 font-medium text-text-secondary">Módulos Asignados</th>
                 <th className="text-left py-3 px-4 font-medium text-text-secondary">Estado</th>
                 <th className="text-left py-3 px-4 font-medium text-text-secondary">Notas</th>
                 <th className="text-left py-3 px-4 font-medium text-text-secondary">Horas</th>
@@ -130,9 +204,9 @@ const Users: React.FC = () => {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={6} className="py-6 text-center text-text-secondary">{t('loading', 'Cargando...')}</td></tr>
+                <tr><td colSpan={8} className="py-6 text-center text-text-secondary">{t('loading', 'Cargando...')}</td></tr>
               ) : users.length === 0 ? (
-                <tr><td colSpan={6} className="py-6 text-center text-text-secondary">{t('adminDashboard.noUsers', 'No hay usuarios')}</td></tr>
+                <tr><td colSpan={8} className="py-6 text-center text-text-secondary">{t('adminDashboard.noUsers', 'No hay usuarios')}</td></tr>
               ) : (
                 users.map(user => {
                   const local = editUsers[user.id] || {};
@@ -142,6 +216,22 @@ const Users: React.FC = () => {
                       <td className="py-3 px-4 cursor-pointer text-primary underline" onClick={() => openAssignModal(user)}>{user.firstName} {user.lastName}</td>
                       <td className="py-3 px-4">{user.email}</td>
                       <td className="py-3 px-4 capitalize">{t('role.' + user.role, { defaultValue: user.role })}</td>
+                      <td className="py-3 px-4">
+                        <div className="flex flex-wrap gap-1">
+                          {userModulesData[user.id]?.length > 0 ? (
+                            userModulesData[user.id].map((module: any) => (
+                              <span 
+                                key={module.id} 
+                                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-brand-green-light text-brand-green-dark"
+                              >
+                                {module.title}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-gray-500 text-sm">Sin módulos</span>
+                          )}
+                        </div>
+                      </td>
                       <td className="py-3 px-4">
                         <select
                           className={`px-2 py-1 text-xs font-medium rounded-full focus:outline-none focus:ring-2 focus:ring-primary ${
@@ -191,9 +281,22 @@ const Users: React.FC = () => {
                       </td>
                       <td className="py-3 px-4 text-sm text-text-secondary">{user.createdAt ? user.createdAt.split('T')[0] : ''}</td>
                       <td className="py-3 px-4">
-                        <Button size="sm" variant="outline" onClick={() => handleDelete(user.id)} disabled={!!saving || !!(currentUser && currentUser.id === user.id)}>
-                          Eliminar
-                        </Button>
+                        <div className="flex flex-col space-y-1">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => handleDelete(user.id)} 
+                            disabled={!!saving || !!(currentUser && currentUser.id === user.id)}
+                            className={userModulesData[user.id]?.length > 0 ? 'border-red-300 text-red-600 hover:bg-red-50' : ''}
+                          >
+                            Eliminar
+                          </Button>
+                          {userModulesData[user.id]?.length > 0 && (
+                            <span className="text-xs text-red-600 font-medium">
+                              {userModulesData[user.id].length} módulo{userModulesData[user.id].length !== 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       {/* <td className="py-3 px-4 space-x-2">
                         <Button size="sm" variant="outline">{t('adminDashboard.manage', 'Gestionar')}</Button>
