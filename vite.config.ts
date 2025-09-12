@@ -7,4 +7,7 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  define: {
+    'import.meta.env.VITE_API_URL': JSON.stringify('https://happytribe.vercel.app'),
+  },
 });

@@ -22,6 +22,7 @@ model User {
 
   status    String   @default("pending") // Estado del usuario
   notes     String?  // Notas internas
+  tribe     String?  // Tribu del usuario
 
   hours     Int      @default(0) // Nueva columna (en inglés)
 
