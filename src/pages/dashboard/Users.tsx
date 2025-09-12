@@ -193,6 +193,7 @@ const Users: React.FC = () => {
                 <th className="text-left py-3 px-4 font-medium text-text-secondary">Nombre</th>
                 <th className="text-left py-3 px-4 font-medium text-text-secondary">Email</th>
                 <th className="text-left py-3 px-4 font-medium text-text-secondary">Rol</th>
+                <th className="text-left py-3 px-4 font-medium text-text-secondary">Tribu</th>
                 <th className="text-left py-3 px-4 font-medium text-text-secondary">Módulos Asignados</th>
                 <th className="text-left py-3 px-4 font-medium text-text-secondary">Estado</th>
                 <th className="text-left py-3 px-4 font-medium text-text-secondary">Notas</th>
@@ -204,9 +205,9 @@ const Users: React.FC = () => {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={8} className="py-6 text-center text-text-secondary">{t('loading', 'Cargando...')}</td></tr>
+                <tr><td colSpan={9} className="py-6 text-center text-text-secondary">{t('loading', 'Cargando...')}</td></tr>
               ) : users.length === 0 ? (
-                <tr><td colSpan={8} className="py-6 text-center text-text-secondary">{t('adminDashboard.noUsers', 'No hay usuarios')}</td></tr>
+                <tr><td colSpan={9} className="py-6 text-center text-text-secondary">{t('adminDashboard.noUsers', 'No hay usuarios')}</td></tr>
               ) : (
                 users.map(user => {
                   const local = editUsers[user.id] || {};
@@ -216,6 +217,15 @@ const Users: React.FC = () => {
                       <td className="py-3 px-4 cursor-pointer text-primary underline" onClick={() => openAssignModal(user)}>{user.firstName} {user.lastName}</td>
                       <td className="py-3 px-4">{user.email}</td>
                       <td className="py-3 px-4 capitalize">{t('role.' + user.role, { defaultValue: user.role })}</td>
+                      <td className="py-3 px-4">
+                        {user.tribe ? (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {user.tribe}
+                          </span>
+                        ) : (
+                          <span className="text-gray-500 text-sm">Sin tribu</span>
+                        )}
+                      </td>
                       <td className="py-3 px-4">
                         <div className="flex flex-wrap gap-1">
                           {userModulesData[user.id]?.length > 0 ? (

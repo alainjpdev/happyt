@@ -32,6 +32,8 @@ import { Quotations } from './pages/dashboard/Quotations';
 import { CRM } from './pages/dashboard/CRM';
 import { WhatsApp } from './pages/dashboard/WhatsApp';
 import { Todo } from './pages/dashboard/Todo';
+import { Exams } from './pages/dashboard/Exams';
+import { Quiz } from './pages/dashboard/Quiz';
 
 // Layout wrapper component
 const DashboardLayoutWrapper: React.FC = () => {
@@ -260,6 +262,22 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <Notion />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="exams" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Exams />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="quiz" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Quiz />
                 </ProtectedRoute>
               } 
             />
