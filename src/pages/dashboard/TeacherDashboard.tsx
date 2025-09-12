@@ -51,38 +51,38 @@ export const TeacherDashboard: React.FC = () => {
         const allStudentClasses = studentClassesRes.data || [];
         const myClassIds = teacherClasses.map((cls: any) => cls.id);
         const filteredStudentClasses = allStudentClasses.filter((sc: any) =>
-          myClassIds.includes(sc.classId)
-        );
+                myClassIds.includes(sc.classId)
+              );
         setMyStudentClasses(filteredStudentClasses);
         
         console.log('Teacher classes:', teacherClasses);
         console.log('All student classes:', allStudentClasses);
         console.log('My student classes:', filteredStudentClasses);
         
-        // Mapear a estudiantes únicos
-        const studentsMap: { [id: string]: any } = {};
+              // Mapear a estudiantes únicos
+              const studentsMap: { [id: string]: any } = {};
         filteredStudentClasses.forEach((sc: any) => {
           if (sc.student && !studentsMap[sc.student.id]) {
-            studentsMap[sc.student.id] = {
-              id: sc.student.id,
+                  studentsMap[sc.student.id] = {
+                    id: sc.student.id,
               name: `${sc.student.firstName} ${sc.student.lastName}`,
-              email: sc.student.email,
-              joinDate: sc.joinedAt,
+                    email: sc.student.email,
+                    joinDate: sc.joinedAt,
               progress: Math.floor(Math.random() * 100), // Simulado por ahora
               classId: sc.classId
-            };
-          }
-        });
+                  };
+                }
+              });
         
         console.log('Students map:', studentsMap);
         
-        // Tomar los más recientes (por fecha de inscripción)
-        const recent = Object.values(studentsMap)
-          .sort((a: any, b: any) => new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime())
+              // Tomar los más recientes (por fecha de inscripción)
+              const recent = Object.values(studentsMap)
+                .sort((a: any, b: any) => new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime())
           .slice(0, 5);
         
         console.log('Recent students:', recent);
-        setRecentStudents(recent);
+              setRecentStudents(recent);
         
       } catch (error: any) {
         console.error('Error loading teacher data:', error);
@@ -197,7 +197,7 @@ export const TeacherDashboard: React.FC = () => {
                   
                   return (
                     <div key={cls.id} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-all duration-200 bg-white">
-                      <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between mb-3">
                         <h3 className="font-semibold text-brand-brown text-lg">{cls.title}</h3>
                         <div className="flex items-center space-x-2">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -207,7 +207,7 @@ export const TeacherDashboard: React.FC = () => {
                           }`}>
                             {isFull ? 'Llena' : isAlmostFull ? 'Casi llena' : 'Disponible'}
                           </span>
-                          <span className="text-sm text-gray-500">
+                    <span className="text-sm text-gray-500">
                             {cls.students || 0} / {cls.maxStudents || '∞'} estudiantes
                           </span>
                         </div>
@@ -224,9 +224,9 @@ export const TeacherDashboard: React.FC = () => {
                           <Clock className="w-4 h-4 text-brand-green-medium" />
                           <span className="text-sm text-gray-600">
                             Próxima: {cls.nextClass || 'No programada'}
-                          </span>
-                        </div>
-                      </div>
+                    </span>
+                  </div>
+                  </div>
 
                       {/* Barra de ocupación mejorada */}
                       <div className="mb-4">
@@ -234,8 +234,8 @@ export const TeacherDashboard: React.FC = () => {
                           <span className="text-gray-600 font-medium">Ocupación de la clase</span>
                           <span className="font-bold text-brand-brown">
                             {occupancyPercentage}%
-                          </span>
-                        </div>
+                      </span>
+                    </div>
                         <div className="w-full bg-gray-200 rounded-full h-3">
                           <div 
                             className={`h-3 rounded-full transition-all duration-500 ${
@@ -244,9 +244,9 @@ export const TeacherDashboard: React.FC = () => {
                               'bg-brand-green-medium'
                             }`}
                             style={{ width: `${Math.min(occupancyPercentage, 100)}%` }}
-                          ></div>
-                        </div>
-                      </div>
+                      ></div>
+                    </div>
+                  </div>
 
                       {/* Información adicional */}
                       <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
@@ -265,14 +265,14 @@ export const TeacherDashboard: React.FC = () => {
                       </div>
 
                       {/* Botones de acción */}
-                      <div className="flex space-x-2">
+                  <div className="flex space-x-2">
                         <Button 
                           size="sm" 
                           className="flex-1 bg-brand-green-medium hover:bg-brand-green-dark text-white"
                           onClick={() => window.location.href = `/dashboard/classes/${cls.id}`}
                         >
                           Ver Detalle
-                        </Button>
+                    </Button>
                         <Button 
                           size="sm" 
                           variant="outline"
@@ -280,9 +280,9 @@ export const TeacherDashboard: React.FC = () => {
                           onClick={() => window.location.href = `/dashboard/students?class=${cls.id}`}
                         >
                           Gestionar Estudiantes
-                        </Button>
-                      </div>
-                    </div>
+                    </Button>
+                  </div>
+                </div>
                   );
                 })
               )}
@@ -390,7 +390,7 @@ export const TeacherDashboard: React.FC = () => {
                             {assignment.totalStudents || 0} estudiantes totales
                           </span>
                         </div>
-                      </div>
+                  </div>
 
                       {/* Botones de acción */}
                       <div className="flex space-x-2">
@@ -410,9 +410,9 @@ export const TeacherDashboard: React.FC = () => {
                         >
                           <Plus className="w-4 h-4 mr-2" />
                           Editar
-                        </Button>
-                      </div>
-                    </div>
+                    </Button>
+                  </div>
+                </div>
                   );
                 })
               )}
@@ -464,7 +464,7 @@ export const TeacherDashboard: React.FC = () => {
               ) : (
                 recentStudents.map((student) => (
                   <div key={student.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                    <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-brand-green-light rounded-full flex items-center justify-center">
                         <span className="text-sm font-medium text-brand-green-dark">
                           {student.name ? student.name.split(' ').map((n: string) => n[0]).join('') : '??'}
@@ -506,7 +506,7 @@ export const TeacherDashboard: React.FC = () => {
                 onClick={() => window.location.href = '/dashboard/students'}
               >
                 Ver Todos los Estudiantes
-              </Button>
+            </Button>
             )}
           </Card>
 

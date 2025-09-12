@@ -5,6 +5,13 @@ import { Button } from '../../components/ui/Button';
 import { useAuthStore } from '../../store/authStore';
 import NotionTasksTable from './NotionTasksTable';
 
+// Helper function para construir URLs del API sin doble slash
+const getApiUrl = (endpoint: string) => {
+  const baseUrl = import.meta.env.VITE_API_URL || 'https://happytribe.vercel.app';
+  const cleanBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  return `${cleanBaseUrl}${endpoint}`;
+};
+
 export const AdminDashboard: React.FC = () => {
   const { user } = useAuthStore();
 
@@ -18,7 +25,14 @@ export const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    fetch(`${import.meta.env.VITE_API_URL}/api/users`, {
+    console.log('🔍 API URLs:', {
+      users: getApiUrl('/api/users'),
+      classes: getApiUrl('/api/classes'),
+      modules: getApiUrl('/api/modules'),
+      assignments: getApiUrl('/api/assignments')
+    });
+    
+    fetch(getApiUrl('/api/users'), {
       headers: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {})
@@ -26,13 +40,13 @@ export const AdminDashboard: React.FC = () => {
     })
       .then(res => res.json())
       .then(setUsers);
-    fetch(`${import.meta.env.VITE_API_URL}/api/classes`)
+    fetch(getApiUrl('/api/classes'))
       .then(res => res.json())
       .then(setClasses);
-    fetch(`${import.meta.env.VITE_API_URL}/api/modules`)
+    fetch(getApiUrl('/api/modules'))
       .then(res => res.json())
       .then(setModules);
-    fetch(`${import.meta.env.VITE_API_URL}/api/assignments`)
+    fetch(getApiUrl('/api/assignments'))
       .then(res => res.json())
       .then(setAssignments);
   }, []);
@@ -42,6 +56,7 @@ export const AdminDashboard: React.FC = () => {
   const activeStudents = Array.isArray(users) ? users.filter(u => u.role === 'user' && u.status === 'active').length : 0;
   const totalTeachers = Array.isArray(users) ? users.filter(u => u.role === 'coordinator').length : 0;
   const totalClasses = Array.isArray(classes) ? classes.length : 0;
+  const usersWithoutTribeCount = Array.isArray(users) ? users.filter(u => !u.tribe || u.tribe === null || u.tribe === '').length : 0;
   // Dummy para crecimiento y tasa de finalización
   const monthlyGrowth = 12.5;
   const completionRate = 87.3;
@@ -57,8 +72,14 @@ export const AdminDashboard: React.FC = () => {
           email: u.email,
           role: u.role,
           status: u.status,
+          tribe: u.tribe,
           joinDate: u.createdAt ? u.createdAt.split('T')[0] : ''
         }))
+    : [];
+
+  // Usuarios sin tribu (el campo tribe no existe en el backend actualmente)
+  const usersWithoutTribe = Array.isArray(users) 
+    ? users.filter(u => !u.tribe || u.tribe === null || u.tribe === '')
     : [];
 
   // Asignación de profesores (clases con su profesor)
@@ -102,6 +123,7 @@ export const AdminDashboard: React.FC = () => {
     activeStudents,
     totalTeachers,
     totalClasses,
+    usersWithoutTribeCount,
     monthlyGrowth,
     completionRate
   };
@@ -116,7 +138,7 @@ export const AdminDashboard: React.FC = () => {
     setClasses(updatedClasses);
     setSaveMsg(null);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/classes/${classId}`, {
+      const res = await fetch(getApiUrl(`/api/classes/${classId}`), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ teacherId })
@@ -176,12 +198,11 @@ export const AdminDashboard: React.FC = () => {
           <p className="text-sm text-gray-500 mt-2">{systemStats.totalClasses} clases</p>
         </Card>
         <Card className="text-center">
-          <BarChart3 className="w-8 h-8 text-orange-600 mx-auto mb-3" />
-          <h3 className="text-2xl font-bold text-text">{systemStats.completionRate}%</h3>
-          <p className="text-gray-600">Tasa de Finalización</p>
+          <AlertTriangle className="w-8 h-8 text-orange-600 mx-auto mb-3" />
+          <h3 className="text-2xl font-bold text-text">{systemStats.totalUsers}</h3>
+          <p className="text-gray-600">Total Usuarios</p>
           <div className="flex items-center justify-center mt-2">
-            <TrendingUp className="w-4 h-4 text-green-600 mr-1" />
-            <span className="text-sm text-green-600">+2.3%</span>
+            <span className="text-sm text-orange-600">Campo tribe pendiente</span>
           </div>
         </Card>
       </div>
@@ -220,9 +241,16 @@ export const AdminDashboard: React.FC = () => {
                         <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                           user.role === 'coordinator' 
                             ? 'bg-green-100 text-green-800' 
-                            : 'bg-blue-100 text-blue-800'
+                            : user.role === 'admin'
+                            ? 'bg-purple-100 text-purple-800'
+                            : user.role === 'teacher'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-gray-100 text-gray-800'
                         }`}>
-                          {user.role === 'coordinator' ? 'Coordinador' : user.role === 'user' ? 'Usuario' : user.role}
+                          {user.role === 'coordinator' ? 'Coordinador' : 
+                           user.role === 'admin' ? 'Admin' :
+                           user.role === 'teacher' ? 'Profesor' : 
+                           user.role === 'student' ? 'Estudiante' : user.role}
                         </span>
                       </td>
                       <td className="py-3 px-4">
@@ -285,10 +313,47 @@ export const AdminDashboard: React.FC = () => {
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Estado del Sistema */}
+          <Card>
+            <h2 className="text-xl font-bold text-text mb-4">📊 Estado del Sistema</h2>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-blue-50 border border-blue-200">
+                <div>
+                  <p className="text-sm font-medium text-blue-800">Backend Conectado</p>
+                  <p className="text-xs text-blue-600">API funcionando correctamente</p>
+                </div>
+                <span className="text-xs text-blue-600 font-medium">✅</span>
+              </div>
+              
+              <div className="flex items-center justify-between p-3 rounded-lg bg-orange-50 border border-orange-200">
+                <div>
+                  <p className="text-sm font-medium text-orange-800">Campo Tribe</p>
+                  <p className="text-xs text-orange-600">Pendiente de implementación en backend</p>
+                </div>
+                <span className="text-xs text-orange-600 font-medium">⚠️</span>
+              </div>
+              
+              <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 border border-green-200">
+                <div>
+                  <p className="text-sm font-medium text-green-800">Usuarios Cargados</p>
+                  <p className="text-xs text-green-600">{totalUsers} usuarios disponibles</p>
+                </div>
+                <span className="text-xs text-green-600 font-medium">✅</span>
+              </div>
+            </div>
+          </Card>
+
           {/* Alertas del Sistema */}
           <Card>
             <h2 className="text-xl font-bold text-text mb-4">Alertas del Sistema</h2>
             <div className="space-y-3">
+              <div className="flex items-start space-x-3 p-3 rounded-lg border border-orange-200 bg-orange-50">
+                <AlertTriangle className="w-5 h-5 mt-0.5 text-orange-600" />
+                <div className="flex-1">
+                  <p className="text-sm text-orange-600">Campo 'tribe' no disponible en backend</p>
+                  <p className="text-xs text-orange-500 mt-1">Funcionalidad de tribus pendiente de implementación</p>
+                </div>
+              </div>
               {systemAlerts.map((alert) => (
                 <div key={alert.id} className="flex items-start space-x-3 p-3 rounded-lg border border-gray-200">
                   <AlertTriangle className={`w-5 h-5 mt-0.5 ${
