@@ -34,6 +34,7 @@ import { WhatsApp } from './pages/dashboard/WhatsApp';
 import { Todo } from './pages/dashboard/Todo';
 import { Exams } from './pages/dashboard/Exams';
 import { Quiz } from './pages/dashboard/Quiz';
+import { GoogleClassroom } from './pages/dashboard/GoogleClassroom';
 
 // Layout wrapper component
 const DashboardLayoutWrapper: React.FC = () => {
@@ -278,6 +279,14 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <Quiz />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="google-classroom" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <GoogleClassroom />
                 </ProtectedRoute>
               } 
             />

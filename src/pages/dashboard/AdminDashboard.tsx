@@ -3,6 +3,7 @@ import { Users, BookOpen, TrendingUp, AlertTriangle, UserPlus, Settings, BarChar
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useAuthStore } from '../../store/authStore';
+import { GoogleClassroomIntegration } from '../../components/GoogleClassroomIntegration';
 import NotionTasksTable from './NotionTasksTable';
 
 // Helper function para construir URLs del API sin doble slash
@@ -205,6 +206,17 @@ export const AdminDashboard: React.FC = () => {
             <span className="text-sm text-orange-600">Campo tribe pendiente</span>
           </div>
         </Card>
+      </div>
+
+      {/* Google Classroom Integration */}
+      <div className="mb-6">
+        <GoogleClassroomIntegration 
+          onSyncComplete={(data) => {
+            console.log('Sincronización completada:', data);
+            // Recargar datos del dashboard
+            window.location.reload();
+          }}
+        />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
