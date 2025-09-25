@@ -1,8 +1,10 @@
 import axios from 'axios';
+import { getBackendURL } from '../config/environment';
+import { useAuthStore } from '../store/authStore';
 
 // Configuración base de Axios
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://colorland-app-ff3fdd79ac35.herokuapp.com',
+  baseURL: getBackendURL(),
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -12,29 +14,121 @@ export const apiClient = axios.create({
 // Interceptor para agregar token automáticamente
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Intentar obtener el token desde múltiples fuentes
+    let token = null;
+    
+    try {
+      // 1. Primero intentar desde el store de Zustand directamente
+      const authState = useAuthStore.getState();
+      token = authState.token;
+      
+      // 2. Si no existe, intentar desde localStorage directo
+      if (!token) {
+        token = localStorage.getItem('token');
+      }
+      
+      // 3. Si no existe, intentar desde el estado persist de Zustand
+      if (!token) {
+        const authStorage = localStorage.getItem('auth-storage');
+        if (authStorage) {
+          const parsed = JSON.parse(authStorage);
+          token = parsed?.state?.token || parsed?.token;
+        }
+      }
+      
+      console.log('🔑 Token encontrado para API:', token ? 'SÍ' : 'NO');
+      console.log('🔑 Token value:', token ? `${token.substring(0, 20)}...` : 'null');
+      console.log('🔑 Token completo (primeros 50 chars):', token ? token.substring(0, 50) : 'null');
+      console.log('🔑 URL de la petición:', config.url);
+      console.log('🔑 Estado del store:', { 
+        hasToken: !!authState.token, 
+        isAuthenticated: authState.isAuthenticated,
+        userEmail: authState.user?.email 
+      });
+      
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+        console.log('✅ Token agregado a headers de la petición');
+      } else {
+        console.warn('⚠️ No se encontró token para la petición');
+        console.warn('⚠️ Estado del store:', authState);
+      }
+    } catch (error) {
+      console.error('❌ Error obteniendo token:', error);
     }
+    
     return config;
   },
   (error) => {
+    console.error('❌ Error en interceptor de request:', error);
     return Promise.reject(error);
   }
 );
 
 // Interceptor para manejar respuestas y errores
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('✅ Respuesta API exitosa:', response.config.url);
+    return response;
+  },
   (error) => {
+    console.error('❌ Error en respuesta API:', {
+      url: error.config?.url,
+      status: error.response?.status,
+      message: error.message
+    });
+    
     if (error.response?.status === 401) {
-      // Token expirado o inválido
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      console.warn('⚠️ Token expirado o inválido - 401 Unauthorized');
+      // Limpiar el estado de autenticación
+      const authState = useAuthStore.getState();
+      authState.logout();
     }
+    
+    if (error.response?.status === 403) {
+      console.warn('⚠️ Acceso denegado - 403 Forbidden');
+      console.warn('⚠️ Verificando estado de autenticación...');
+      const authState = useAuthStore.getState();
+      console.warn('⚠️ Estado actual:', {
+        isAuthenticated: authState.isAuthenticated,
+        hasToken: !!authState.token,
+        userRole: authState.user?.role,
+        userStatus: authState.user?.status
+      });
+    }
+    
     return Promise.reject(error);
   }
 );
+
+// Función de utilidad para verificar y refrescar el token
+export const checkAndRefreshToken = async () => {
+  const authState = useAuthStore.getState();
+  
+  if (!authState.token) {
+    console.warn('⚠️ No hay token disponible');
+    return false;
+  }
+  
+  try {
+    // Verificar si el token está expirado
+    const tokenPayload = JSON.parse(atob(authState.token.split('.')[1]));
+    const now = Date.now() / 1000;
+    
+    if (tokenPayload.exp && tokenPayload.exp < now) {
+      console.warn('⚠️ Token expirado, intentando refrescar...');
+      // Aquí podrías implementar la lógica de refresh token
+      // Por ahora, simplemente retornamos false
+      return false;
+    }
+    
+    console.log('✅ Token válido');
+    return true;
+  } catch (error) {
+    console.error('❌ Error verificando token:', error);
+    return false;
+  }
+};
 
 // Servicios de API
 export const authAPI = {

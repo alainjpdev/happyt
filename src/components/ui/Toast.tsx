@@ -71,7 +71,7 @@ interface ToastContainerProps {
 
 const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onRemove }) => {
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2">
+    <div className="fixed top-4 right-4 z-50 space-y-3 max-w-md">
       {toasts.map((toast) => (
         <ToastItem
           key={toast.id}
@@ -127,26 +127,30 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onRemove }) => {
 
   return (
     <div
-      className={`max-w-sm w-full ${config.bgColor} ${config.borderColor} border rounded-lg shadow-lg p-4 transform transition-all duration-300 ease-in-out`}
+      className={`w-full ${config.bgColor} ${config.borderColor} border rounded-xl shadow-xl p-4 transform transition-all duration-300 ease-in-out hover:shadow-2xl hover:scale-105`}
+      style={{
+        animation: 'slideInRight 0.3s ease-out'
+      }}
     >
       <div className="flex items-start">
         <div className="flex-shrink-0">
-          <Icon className={`w-5 h-5 ${config.iconColor}`} />
+          <Icon className={`w-6 h-6 ${config.iconColor}`} />
         </div>
         <div className="ml-3 w-0 flex-1">
-          <p className={`text-sm font-medium ${config.titleColor}`}>
+          <p className={`text-sm font-semibold ${config.titleColor} leading-tight`}>
             {title}
           </p>
           {message && (
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-2 text-sm text-gray-700 leading-relaxed">
               {message}
             </p>
           )}
         </div>
         <div className="ml-4 flex-shrink-0 flex">
           <button
-            className="inline-flex text-gray-400 hover:text-gray-600 focus:outline-none"
+            className="inline-flex text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 rounded-full p-1 transition-colors"
             onClick={() => onRemove(toast.id)}
+            title="Cerrar notificación"
           >
             <X className="w-4 h-4" />
           </button>
@@ -176,10 +180,15 @@ export const useToastNotifications = () => {
     addToast({ type: 'info', title, message });
   }, [addToast]);
 
+  const showToast = useCallback((title: string, type: ToastType, message?: string) => {
+    addToast({ type, title, message });
+  }, [addToast]);
+
   return {
     showSuccess,
     showError,
     showWarning,
-    showInfo
+    showInfo,
+    showToast
   };
 };

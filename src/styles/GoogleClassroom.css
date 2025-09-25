@@ -1,0 +1,224 @@
+/* Estilos para la integración de Google Classroom */
+.google-classroom-integration {
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin: 20px 0;
+  background-color: #ffffff;
+}
+
+.google-classroom-integration .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.google-classroom-integration .error {
+  background-color: #fef2f2;
+  color: #dc2626;
+  padding: 12px;
+  border-radius: 6px;
+  margin: 10px 0;
+  border: 1px solid #fecaca;
+}
+
+.google-classroom-integration .sync-status {
+  background-color: #f0fdf4;
+  color: #166534;
+  padding: 12px;
+  border-radius: 6px;
+  margin: 10px 0;
+  border: 1px solid #bbf7d0;
+}
+
+.classes-section {
+  margin-top: 20px;
+}
+
+.classes-section h4 {
+  color: #374151;
+  margin-bottom: 15px;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.classes-list {
+  margin-top: 15px;
+  display: grid;
+  gap: 15px;
+}
+
+.class-item {
+  border: 1px solid #e5e7eb;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #f9fafb;
+  transition: all 0.2s ease;
+}
+
+.class-item:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+}
+
+.class-item h5 {
+  margin: 0 0 8px 0;
+  color: #111827;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.class-item p {
+  margin: 0 0 15px 0;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.class-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.class-details {
+  margin-top: 25px;
+  padding: 20px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.class-details h4 {
+  color: #1e293b;
+  margin-bottom: 20px;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.students-section,
+.assignments-section {
+  margin: 20px 0;
+}
+
+.students-section h5,
+.assignments-section h5 {
+  color: #374151;
+  margin-bottom: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.students-section ul,
+.assignments-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.students-section li,
+.assignments-section li {
+  padding: 12px;
+  margin: 8px 0;
+  background-color: white;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.students-section li:hover,
+.assignments-section li:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.assignments-section li strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+.assignments-section li p {
+  margin: 8px 0;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.assignments-section li small {
+  color: #9ca3af;
+  font-size: 0.75rem;
+}
+
+/* Botones */
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.btn-secondary {
+  background-color: #6b7280;
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #4b5563;
+}
+
+.btn-success {
+  background-color: #10b981;
+  color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+  background-color: #059669;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Estados de carga */
+.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .google-classroom-integration {
+    padding: 15px;
+  }
+  
+  .class-actions {
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

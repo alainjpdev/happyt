@@ -20,6 +20,8 @@ const Users: React.FC = () => {
   const [userModulesData, setUserModulesData] = useState<{[userId: string]: any[]}>({});
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [bulkTribe, setBulkTribe] = useState<string>('');
+  const [bulkModule, setBulkModule] = useState<string>('');
+  const [bulkModuleModalOpen, setBulkModuleModalOpen] = useState(false);
 
   useEffect(() => {
     apiClient.get('/api/users')
@@ -165,6 +167,58 @@ const Users: React.FC = () => {
       setSaveMsg(`${selectedUsers.length} usuarios asignados a ${bulkTribe}`);
     } catch (err: any) {
       setSaveMsg(err.message || 'Error al asignar tribus');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleBulkModuleAssign = async () => {
+    if (!bulkTribe || !bulkModule) return;
+    
+    setSaving(true);
+    setSaveMsg(null);
+    
+    try {
+      // Filtrar usuarios por tribu
+      const usersInTribe = users.filter(user => user.tribe === bulkTribe);
+      
+      if (usersInTribe.length === 0) {
+        setSaveMsg(`No se encontraron usuarios en la tribu ${bulkTribe}`);
+        return;
+      }
+      
+      console.log(`🔄 Asignando módulo ${bulkModule} a ${usersInTribe.length} usuarios de la tribu ${bulkTribe}`);
+      
+      // Asignar módulo a cada usuario de la tribu
+      for (const user of usersInTribe) {
+        try {
+          // Obtener módulos actuales del usuario
+          const currentModulesRes = await apiClient.get(`/api/users/${user.id}/modules`);
+          const currentModuleIds = currentModulesRes.data.map((m: any) => m.id);
+          
+          // Agregar el nuevo módulo si no está ya asignado
+          if (!currentModuleIds.includes(bulkModule)) {
+            const newModuleIds = [...currentModuleIds, bulkModule];
+            await apiClient.put(`/api/users/${user.id}/modules`, { moduleIds: newModuleIds });
+            console.log(`✅ Módulo asignado a ${user.firstName} ${user.lastName}`);
+          } else {
+            console.log(`⚠️ Módulo ya asignado a ${user.firstName} ${user.lastName}`);
+          }
+        } catch (error) {
+          console.error(`❌ Error asignando módulo a ${user.firstName} ${user.lastName}:`, error);
+        }
+      }
+      
+      setBulkTribe('');
+      setBulkModule('');
+      setBulkModuleModalOpen(false);
+      setSaveMsg(`Módulo asignado a ${usersInTribe.length} usuarios de la tribu ${bulkTribe}`);
+      
+      // Refrescar datos
+      loadUserModules(users);
+      
+    } catch (err: any) {
+      setSaveMsg(err.message || 'Error al asignar módulos');
     } finally {
       setSaving(false);
     }
@@ -432,6 +486,16 @@ const Users: React.FC = () => {
           </div>
         )}
         
+        {/* Botón para asignación masiva de módulos por tribu */}
+        <Button 
+          size="lg" 
+          variant="secondary" 
+          onClick={() => setBulkModuleModalOpen(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+        >
+          📚 Asignar Módulo por Tribu
+        </Button>
+        
         {saveMsg && (
           <div className={`px-4 py-2 rounded-lg border ${
             saveMsg.includes('Error') || saveMsg.includes('No se puede') 
@@ -636,6 +700,103 @@ const Users: React.FC = () => {
             <div className="flex gap-2 mt-4">
               <Button size="sm" variant="primary" onClick={handleSaveModules}>Guardar</Button>
               <Button size="sm" variant="outline" onClick={closeAssignModal}>Cancelar</Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Modal para asignación masiva de módulos por tribu */}
+      {bulkModuleModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+          <div className="bg-panel rounded-lg shadow-2xl p-8 w-full max-w-md border border-border relative">
+            <button 
+              className="absolute top-2 right-2 text-text-secondary hover:text-text text-2xl" 
+              onClick={() => setBulkModuleModalOpen(false)}
+            >
+              &times;
+            </button>
+            
+            <h2 className="text-2xl font-bold mb-4 text-text">📚 Asignar Módulo por Tribu</h2>
+            
+            <div className="space-y-4">
+              {/* Selección de tribu */}
+              <div>
+                <label className="block text-sm font-medium text-text mb-2">
+                  Seleccionar Tribu:
+                </label>
+                <select
+                  className="w-full px-3 py-2 border border-border bg-panel text-text rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                  value={bulkTribe}
+                  onChange={e => setBulkTribe(e.target.value)}
+                >
+                  <option value="">Seleccionar tribu</option>
+                  <option value="Tribu 1">Tribu 1</option>
+                  <option value="Tribu 2">Tribu 2</option>
+                  <option value="Tribu 3">Tribu 3</option>
+                  <option value="Tribu 4">Tribu 4</option>
+                  <option value="Tribu 5">Tribu 5</option>
+                </select>
+              </div>
+              
+              {/* Selección de módulo */}
+              <div>
+                <label className="block text-sm font-medium text-text mb-2">
+                  Seleccionar Módulo:
+                </label>
+                <select
+                  className="w-full px-3 py-2 border border-border bg-panel text-text rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                  value={bulkModule}
+                  onChange={e => setBulkModule(e.target.value)}
+                >
+                  <option value="">Seleccionar módulo</option>
+                  {modules.map((module) => (
+                    <option key={module.id} value={module.id}>
+                      {module.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Información de usuarios en la tribu */}
+              {bulkTribe && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-800">
+                    <strong>Usuarios en {bulkTribe}:</strong> {users.filter(u => u.tribe === bulkTribe).length}
+                  </p>
+                  {users.filter(u => u.tribe === bulkTribe).length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-xs text-blue-600">Usuarios:</p>
+                      <ul className="text-xs text-blue-600 list-disc list-inside">
+                        {users.filter(u => u.tribe === bulkTribe).slice(0, 3).map(user => (
+                          <li key={user.id}>{user.firstName} {user.lastName}</li>
+                        ))}
+                        {users.filter(u => u.tribe === bulkTribe).length > 3 && (
+                          <li>... y {users.filter(u => u.tribe === bulkTribe).length - 3} más</li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            <div className="flex gap-2 mt-6">
+              <Button 
+                size="sm" 
+                variant="primary" 
+                onClick={handleBulkModuleAssign}
+                disabled={!bulkTribe || !bulkModule || saving}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {saving ? 'Asignando...' : `Asignar a ${users.filter(u => u.tribe === bulkTribe).length} usuarios`}
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => setBulkModuleModalOpen(false)}
+              >
+                Cancelar
+              </Button>
             </div>
           </div>
         </div>

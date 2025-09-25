@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { BookOpen, Users, BarChart3, Settings, User, LogOut, Home, UserPlus, Layers, FileText, ClipboardList, ExternalLink, Database, ChevronLeft, ChevronRight, FileText as FileTextIcon, Building2, CheckSquare, FileCheck, HelpCircle, GraduationCap } from 'lucide-react';
+import { BookOpen, Users, BarChart3, Settings, User, LogOut, Home, UserPlus, Layers, FileText, ClipboardList, ExternalLink, Database, ChevronLeft, ChevronRight, FileText as FileTextIcon, Building2, CheckSquare, FileCheck, HelpCircle, GraduationCap, ListTodo } from 'lucide-react';
 import { useDarkMode } from '../hooks/useDarkMode';
 import { Moon, Sun } from 'lucide-react';
 import logohappy from '../assets/logohappy.png';
@@ -24,6 +24,7 @@ export const AdminLayout: React.FC = () => {
     { to: '/dashboard/modules', icon: Layers, label: 'Módulos' },
     { to: '/dashboard/materials', icon: FileText, label: 'Materiales' },
     { to: '/dashboard/assignments', icon: ClipboardList, label: 'Tareas' },
+    { to: '/dashboard/todo', icon: ListTodo, label: 'To Do' },
     { to: '/dashboard/exams', icon: FileCheck, label: 'Exámenes' },
     { to: '/dashboard/quiz', icon: HelpCircle, label: 'Cuestionarios' },
     { to: '/dashboard/google-classroom', icon: GraduationCap, label: 'Google Classroom' },

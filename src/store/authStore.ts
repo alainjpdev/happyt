@@ -11,34 +11,24 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
 
       login: async (email: string, password: string) => {
-        console.log('Intentando login en el store', email, password);
+        console.log('🔐 Intentando login en el store', { email, password: '***' });
         try {
-          const res = await fetch(`${import.meta.env.VITE_API_URL}/api/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-          });
-          console.log('Respuesta recibida', res);
-          if (!res.ok) throw new Error('Credenciales inválidas');
-          const { user, token } = await res.json();
+          const { user, token } = await authAPI.login(email, password);
+          console.log('✅ Login exitoso:', { user: user?.email, role: user?.role, tokenLength: token?.length });
+          
+          console.log('💾 Guardando en el store...');
           set({ user, token, isAuthenticated: true });
-          localStorage.setItem('token', token); // <-- Guardar token en localStorage
+          console.log('✅ Estado actualizado en el store');
         } catch (error) {
+          console.error('❌ Error en login:', error);
           throw new Error('Error al iniciar sesión');
         }
       },
 
       register: async (userData: RegisterData) => {
         try {
-          const res = await fetch(`${import.meta.env.VITE_API_URL}/api/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(userData)
-          });
-          if (!res.ok) throw new Error('Error al registrar usuario');
-          const { user, token } = await res.json();
+          const { user, token } = await authAPI.register(userData);
           set({ user, token, isAuthenticated: true });
-          localStorage.setItem('token', token); // <-- Guardar token en localStorage
         } catch (error) {
           throw new Error('Error al registrar usuario');
         }
@@ -50,12 +40,11 @@ export const useAuthStore = create<AuthState>()(
           token: null,
           isAuthenticated: false
         });
-        localStorage.removeItem('token');
       },
 
       checkAuth: () => {
-        const token = localStorage.getItem('token');
-        if (token && get().user) {
+        const { token, user } = get();
+        if (token && user) {
           set({ isAuthenticated: true });
         } else {
           set({

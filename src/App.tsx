@@ -4,6 +4,8 @@ import { useAuthStore } from './store/authStore';
 import { ProtectedRoute } from './routes/ProtectedRoute';
 import { useDarkMode } from './hooks/useDarkMode';
 import { ToastProvider } from './components/ui/Toast';
+import { useGoogleAuthCallback } from './hooks/useGoogleAuth';
+import { GoogleAuthCallback } from './components/GoogleAuthCallback';
 
 // Layouts
 import { StudentLayout } from './layouts/StudentLayout';
@@ -34,21 +36,41 @@ import { WhatsApp } from './pages/dashboard/WhatsApp';
 import { Todo } from './pages/dashboard/Todo';
 import { Exams } from './pages/dashboard/Exams';
 import { Quiz } from './pages/dashboard/Quiz';
-import { GoogleClassroom } from './pages/dashboard/GoogleClassroom';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Layout wrapper component
 const DashboardLayoutWrapper: React.FC = () => {
   const { user } = useAuthStore();
 
-  if (!user) return <Navigate to="/login" replace />;
+  console.log('🏠 DashboardLayoutWrapper - Usuario actual:', user);
 
-  const LayoutComponent = {
-    student: StudentLayout,
-    teacher: TeacherLayout,
-    admin: AdminLayout
-  }[user.role];
+  if (!user) {
+    console.log('❌ No hay usuario, redirigiendo a login');
+    return <Navigate to="/login" replace />;
+  }
 
-  return <LayoutComponent />;
+  console.log('✅ Usuario encontrado, rol:', user.role);
+
+  try {
+    const LayoutComponent = {
+      student: StudentLayout,
+      teacher: TeacherLayout,
+      admin: AdminLayout
+    }[user.role];
+
+    if (!LayoutComponent) {
+      console.error('❌ Layout no encontrado para rol:', user.role);
+      alert(`ERROR: Layout no encontrado para rol: ${user.role}`);
+      return <Navigate to="/login" replace />;
+    }
+
+    console.log('🎯 Renderizando layout para rol:', user.role);
+    return <LayoutComponent />;
+  } catch (error) {
+    console.error('❌ Error renderizando layout:', error);
+    alert(`ERROR RENDERIZANDO LAYOUT: ${error.message}`);
+    return <Navigate to="/login" replace />;
+  }
 };
 
 // Dashboard router component
@@ -67,23 +89,30 @@ const DashboardRouter: React.FC = () => {
 };
 
 const App: React.FC = () => {
-  const { checkAuth } = useAuthStore();
+  const { checkAuth, logout } = useAuthStore();
   const [dark, setDark] = useDarkMode();
+  
+  // Manejar callbacks de Google OAuth
+  const { loading: googleAuthLoading, error: googleAuthError } = useGoogleAuthCallback();
 
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
 
   return (
-    <ToastProvider>
-      <Router>
-        <div className="App">
-        {/* El toggle flotante de dark mode ha sido eliminado */}
-        <Routes>
+    <ErrorBoundary>
+      <ToastProvider>
+        <Router>
+          <div className="App">
+          {/* El toggle flotante de dark mode ha sido eliminado */}
+          <Routes>
           {/* Rutas públicas */}
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          
+          {/* Ruta para callback de Google OAuth */}
+          <Route path="/auth/google/callback" element={<GoogleAuthCallback />} />
 
           {/* Rutas protegidas */}
           <Route
@@ -282,14 +311,6 @@ const App: React.FC = () => {
                 </ProtectedRoute>
               } 
             />
-            <Route 
-              path="google-classroom" 
-              element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <GoogleClassroom />
-                </ProtectedRoute>
-              } 
-            />
           </Route>
 
           {/* Página de no autorizado */}
@@ -318,6 +339,7 @@ const App: React.FC = () => {
         </div>
       </Router>
     </ToastProvider>
+    </ErrorBoundary>
   );
 };
 
