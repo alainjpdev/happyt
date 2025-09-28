@@ -171,7 +171,15 @@ const App: React.FC = () => {
               path="students" 
               element={
                 <ProtectedRoute allowedRoles={['teacher', 'admin']}>
-                  <div className="p-6">Gestión de Estudiantes (Próximamente)</div>
+                  <Users />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="users" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Users />
                 </ProtectedRoute>
               } 
             />

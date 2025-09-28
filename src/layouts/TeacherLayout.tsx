@@ -21,6 +21,7 @@ export const TeacherLayout: React.FC = () => {
     { to: '/dashboard', icon: Home, label: 'Panel de Control' },
     { to: '/dashboard/classes', icon: Calendar, label: 'Mis Clases' },
     { to: '/dashboard/students', icon: Users, label: 'Mis Estudiantes' },
+    { to: '/dashboard/modules', icon: BookOpen, label: 'Módulos' },
     { to: '/dashboard/materials', icon: FileText, label: 'Materiales' },
     { to: '/dashboard/assignments', icon: ClipboardList, label: 'Tareas' },
     { to: '/dashboard/reports', icon: BarChart3, label: 'Reportes' },

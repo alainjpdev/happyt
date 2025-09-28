@@ -13,6 +13,15 @@ const Users: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const { user: currentUser } = useAuthStore();
+  
+  // Debug: Log del usuario actual
+  console.log('🔍 Usuario actual en Users.tsx:', {
+    currentUser: currentUser,
+    role: currentUser?.role,
+    isAdmin: currentUser?.role === 'admin',
+    isTeacher: currentUser?.role === 'teacher',
+    fullUserObject: JSON.stringify(currentUser, null, 2)
+  });
   const [modules, setModules] = useState<any[]>([]);
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
@@ -22,8 +31,15 @@ const Users: React.FC = () => {
   const [bulkTribe, setBulkTribe] = useState<string>('');
   const [bulkModule, setBulkModule] = useState<string>('');
   const [bulkModuleModalOpen, setBulkModuleModalOpen] = useState(false);
+  const [changingRole, setChangingRole] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('🔄 useEffect ejecutándose - Usuario actual:', {
+      currentUser: currentUser,
+      role: currentUser?.role,
+      isAuthenticated: currentUser ? true : false
+    });
+    
     apiClient.get('/api/users')
       .then(res => {
         console.log('🔍 Respuesta del API /api/users:', res.data);
@@ -31,10 +47,43 @@ const Users: React.FC = () => {
         console.log('🔍 Es array?', Array.isArray(res.data));
         
         // El backend devuelve un objeto con users array
-        const usersArray = res.data.users || res.data;
+        let usersArray = res.data.users || res.data;
         
         if (Array.isArray(usersArray)) {
           console.log('✅ Usuarios encontrados:', usersArray.length);
+          console.log('📋 Todos los usuarios con sus roles:', usersArray.map(u => ({ 
+            name: u.firstName + ' ' + u.lastName, 
+            role: u.role, 
+            email: u.email 
+          })));
+          
+          // Filtrar usuarios según el rol del usuario actual
+          console.log('🔍 Usuario actual para filtrado:', {
+            currentUser: currentUser,
+            role: currentUser?.role,
+            totalUsers: usersArray.length
+          });
+          
+          if (currentUser?.role === 'teacher') {
+            // Los teachers solo ven estudiantes
+            const studentsOnly = usersArray.filter(user => user.role === 'student');
+            console.log('👨‍🏫 Vista de teacher - Filtrado:', {
+              totalUsers: usersArray.length,
+              studentsFound: studentsOnly.length,
+              students: studentsOnly.map(s => ({ name: s.firstName + ' ' + s.lastName, role: s.role }))
+            });
+            usersArray = studentsOnly;
+          } else if (currentUser?.role === 'student') {
+            // Los estudiantes no deberían ver esta página, pero por seguridad
+            usersArray = [];
+            console.log('👨‍🎓 Vista de student - Sin acceso');
+          } else if (currentUser?.role === 'admin') {
+            console.log('👑 Vista de admin - Todos los usuarios:', usersArray.length);
+          } else {
+            console.log('❓ Rol desconocido:', currentUser?.role);
+          }
+          
+          console.log('📊 Usuarios finales a mostrar:', usersArray.length);
           setUsers(usersArray);
           setLoading(false);
           // Cargar módulos de cada usuario
@@ -47,10 +96,20 @@ const Users: React.FC = () => {
       })
       .catch(error => {
         console.error('❌ Error obteniendo usuarios:', error);
+        
+        // Si es teacher y recibe 403, mostrar mensaje específico
+        if (currentUser?.role === 'teacher' && error.response?.status === 403) {
+          console.log('👨‍🏫 Teacher recibió 403 - No tiene permisos para ver usuarios');
+          setUsers([]);
+          setLoading(false);
+          setSaveMsg('Los profesores no tienen acceso a la lista completa de usuarios. Contacta al administrador para obtener permisos o usar otras funcionalidades del sistema.');
+          return;
+        }
+        
         setUsers([]);
         setLoading(false);
       });
-  }, []);
+  }, [currentUser?.role, currentUser?.id]); // Agregar más dependencias para asegurar que se ejecute cuando cambie el usuario
 
   const loadUserModules = async (users: any[]) => {
     // Validar que users sea un array
@@ -221,6 +280,53 @@ const Users: React.FC = () => {
       setSaveMsg(err.message || 'Error al asignar módulos');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Función para cambiar el rol de un usuario
+  const changeUserRole = async (userId: string, newRole: string) => {
+    if (!currentUser || currentUser.role !== 'admin') {
+      alert('Solo los administradores pueden cambiar roles');
+      return;
+    }
+
+    try {
+      setChangingRole(userId);
+      console.log(`🔄 Cambiando rol de usuario ${userId} a ${newRole}`);
+      
+      // Encontrar el usuario actual para enviar todos sus datos
+      const currentUserData = users.find(user => user.id === userId);
+      if (!currentUserData) {
+        throw new Error('Usuario no encontrado');
+      }
+      
+      // Preparar todos los datos del usuario con el nuevo rol
+      const updatedUserData = {
+        ...currentUserData,
+        role: newRole
+      };
+      
+      console.log('📝 Datos a enviar:', updatedUserData);
+      
+      // Llamar al endpoint PUT del backend para actualizar usuario
+      const response = await apiClient.put(`/api/users/${userId}`, updatedUserData);
+      
+      console.log('✅ Rol cambiado exitosamente:', response.data);
+      
+      // Actualizar el estado local
+      setUsers(users.map(user => 
+        user.id === userId 
+          ? { ...user, role: newRole }
+          : user
+      ));
+      
+      setSaveMsg(`Rol cambiado a ${newRole} exitosamente`);
+      
+    } catch (error) {
+      console.error('❌ Error cambiando rol:', error);
+      setSaveMsg('Error al cambiar rol del usuario');
+    } finally {
+      setChangingRole(null);
     }
   };
 
@@ -398,13 +504,65 @@ const Users: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-text">{t('adminDashboard.allUsers', 'Todos los Usuarios')}</h1>
+        <h1 className="text-3xl font-bold text-text">
+          {currentUser?.role === 'teacher' 
+            ? 'Gestión de Usuarios (Restringido)' 
+            : currentUser?.role === 'admin'
+            ? 'Todos los Usuarios'
+            : 'Usuarios'
+          }
+        </h1>
         {selectedUsers.length > 0 && (
           <div className="text-sm text-primary font-medium">
             {selectedUsers.length} usuario{selectedUsers.length !== 1 ? 's' : ''} seleccionado{selectedUsers.length !== 1 ? 's' : ''}
           </div>
         )}
       </div>
+      
+      {/* Mensaje informativo sobre cambio de roles - Solo para admins */}
+      {currentUser?.role === 'admin' && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-blue-800">
+                Gestión de Roles
+              </h3>
+              <div className="mt-1 text-sm text-blue-700">
+                <p>Como administrador, puedes cambiar el rol de cualquier usuario usando el dropdown en la columna "Rol".</p>
+                <p className="mt-1"><strong>Nota:</strong> Todos los usuarios se registran como "Estudiante" por defecto.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mensaje informativo para teachers */}
+      {currentUser?.role === 'teacher' && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-yellow-800">
+                Acceso Restringido
+              </h3>
+              <div className="mt-1 text-sm text-yellow-700">
+                <p><strong>Los profesores no tienen acceso a la gestión de usuarios.</strong></p>
+                <p className="mt-1">Para ver y gestionar estudiantes, necesitas permisos de administrador. Contacta al administrador del sistema.</p>
+                <p className="mt-1"><strong>Alternativas disponibles:</strong> Puedes usar otras secciones del dashboard como módulos, clases y tareas.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="mb-4 flex items-center gap-4">
         <Button size="lg" variant="primary" disabled={saving || Object.keys(editUsers).length === 0} onClick={async () => {
           setSaving(true);
@@ -487,14 +645,17 @@ const Users: React.FC = () => {
         )}
         
         {/* Botón para asignación masiva de módulos por tribu */}
-        <Button 
-          size="lg" 
-          variant="secondary" 
-          onClick={() => setBulkModuleModalOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white"
-        >
-          📚 Asignar Módulo por Tribu
-        </Button>
+        {/* Los admins y teachers pueden hacer asignación masiva */}
+        {(currentUser?.role === 'admin' || currentUser?.role === 'teacher') && (
+          <Button 
+            size="lg" 
+            variant="secondary" 
+            onClick={() => setBulkModuleModalOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            📚 Asignar Módulo por Tribu
+          </Button>
+        )}
         
         {saveMsg && (
           <div className={`px-4 py-2 rounded-lg border ${
@@ -575,7 +736,35 @@ const Users: React.FC = () => {
                       </td>
                       <td className="py-3 px-4 cursor-pointer text-primary underline" onClick={() => openAssignModal(user)}>{user.firstName} {user.lastName}</td>
                       <td className="py-3 px-4">{user.email}</td>
-                      <td className="py-3 px-4 capitalize">{t('role.' + user.role, { defaultValue: user.role })}</td>
+                      <td className="py-3 px-4">
+                        {(() => {
+                          console.log('🔍 Debug rol dropdown:', {
+                            currentUser: currentUser,
+                            userRole: currentUser?.role,
+                            isAdmin: currentUser?.role === 'admin',
+                            userId: user.id,
+                            userRoleToShow: user.role
+                          });
+                          
+                          return currentUser?.role === 'admin' ? (
+                            <select
+                              value={user.role}
+                              onChange={(e) => changeUserRole(user.id, e.target.value)}
+                              disabled={changingRole === user.id}
+                              className="px-2 py-1 text-xs font-medium rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                            >
+                              <option value="student">Estudiante</option>
+                              <option value="teacher">Profesor</option>
+                              <option value="admin">Administrador</option>
+                            </select>
+                          ) : (
+                            <span className="capitalize">{t('role.' + user.role, { defaultValue: user.role })}</span>
+                          );
+                        })()}
+                        {changingRole === user.id && (
+                          <span className="ml-2 text-xs text-blue-600">🔄 Cambiando...</span>
+                        )}
+                      </td>
                       <td className="py-3 px-4">
                         <select
                           className={`px-2 py-1 text-xs font-medium rounded-full focus:outline-none focus:ring-2 focus:ring-primary ${

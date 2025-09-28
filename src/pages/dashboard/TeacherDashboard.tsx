@@ -18,6 +18,8 @@ export const TeacherDashboard: React.FC = () => {
   // Elimina el array dummy de recentStudents y usa estado
   const [recentStudents, setRecentStudents] = useState<any[]>([]);
   const [myStudentClasses, setMyStudentClasses] = useState<any[]>([]);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [modules, setModules] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,11 +30,38 @@ export const TeacherDashboard: React.FC = () => {
         setLoading(true);
         
         // Cargar datos en paralelo
-        const [classesRes, assignmentsRes, studentClassesRes] = await Promise.all([
+        const [classesRes, assignmentsRes, studentClassesRes, modulesRes] = await Promise.all([
           apiClient.get('/api/classes'),
           apiClient.get('/api/assignments'),
-          apiClient.get('/api/studentclasses')
+          apiClient.get('/api/studentclasses'),
+          apiClient.get('/api/modules')
         ]);
+        
+        // Cargar módulos
+        const allModules = modulesRes.data || [];
+        setModules(allModules);
+        console.log('📚 Módulos cargados:', allModules.length);
+        console.log('📚 Datos de módulos:', allModules);
+        console.log('📚 Respuesta completa de módulos:', modulesRes);
+        
+        // Intentar cargar usuarios (puede fallar con 403 para teachers)
+        try {
+          const usersRes = await apiClient.get('/api/users');
+          const usersArray = usersRes.data.users || usersRes.data;
+          if (Array.isArray(usersArray)) {
+            // Filtrar solo estudiantes para el teacher
+            const studentsOnly = usersArray.filter(user => user.role === 'student');
+            setAllUsers(studentsOnly);
+            console.log('👨‍🏫 Estudiantes cargados para teacher:', studentsOnly.length);
+          }
+        } catch (usersError: any) {
+          console.log('👨‍🏫 Teacher no puede acceder a /api/users:', usersError.response?.status);
+          // Si es 403, es normal para teachers, no es un error crítico
+          if (usersError.response?.status !== 403) {
+            console.error('Error inesperado cargando usuarios:', usersError);
+          }
+          setAllUsers([]);
+        }
         
         // Filtrar clases del profesor
         const allClasses = classesRes.data || [];
@@ -104,6 +133,13 @@ export const TeacherDashboard: React.FC = () => {
     loadTeacherData();
   }, [user, navigate]);
 
+  // Debug: Log del estado de módulos
+  console.log('🔍 Estado de módulos en render:', {
+    modules: modules,
+    modulesLength: modules.length,
+    loading: loading
+  });
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -114,8 +150,8 @@ export const TeacherDashboard: React.FC = () => {
           </div>
           <div className="h-10 bg-gray-200 rounded w-32"></div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map(i => (
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+          {[1, 2, 3, 4, 5].map(i => (
             <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
           ))}
         </div>
@@ -142,7 +178,7 @@ export const TeacherDashboard: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <Card className="text-center">
           <Calendar className="w-8 h-8 text-green-600 mx-auto mb-3" />
           <h3 className="text-2xl font-bold text-text">{myClasses.length}</h3>
@@ -151,9 +187,19 @@ export const TeacherDashboard: React.FC = () => {
         <Card className="text-center">
           <Users className="w-8 h-8 text-blue-600 mx-auto mb-3" />
           <h3 className="text-2xl font-bold text-text">
-            {myClasses.reduce((total, cls) => total + (cls.students || 0), 0)}
+            {allUsers.length > 0 ? allUsers.length : recentStudents.length}
           </h3>
-          <p className="text-gray-600">Total Estudiantes</p>
+          <p className="text-gray-600">
+            {allUsers.length > 0 ? 'Total Estudiantes' : 'Estudiantes en Clases'}
+          </p>
+          {allUsers.length === 0 && recentStudents.length === 0 && (
+            <p className="text-xs text-gray-400 mt-1">Sin acceso completo</p>
+          )}
+        </Card>
+        <Card className="text-center">
+          <BookOpen className="w-8 h-8 text-indigo-600 mx-auto mb-3" />
+          <h3 className="text-2xl font-bold text-text">{modules.length}</h3>
+          <p className="text-gray-600">Módulos Disponibles</p>
         </Card>
         <Card className="text-center">
           <FileText className="w-8 h-8 text-orange-600 mx-auto mb-3" />
@@ -162,10 +208,128 @@ export const TeacherDashboard: React.FC = () => {
         </Card>
         <Card className="text-center">
           <TrendingUp className="w-8 h-8 text-purple-600 mx-auto mb-3" />
-          <h3 className="text-2xl font-bold text-text">87%</h3>
-          <p className="text-gray-600">Satisfacción Promedio</p>
+          <h3 className="text-2xl font-bold text-text">
+            {allUsers.length > 0 ? Math.round((allUsers.filter(u => u.status === 'active').length / allUsers.length) * 100) : 'N/A'}
+          </h3>
+          <p className="text-gray-600">
+            {allUsers.length > 0 ? '% Estudiantes Activos' : 'Satisfacción Promedio'}
+          </p>
         </Card>
       </div>
+
+      {/* Estadísticas de Usuarios - Solo si tiene acceso */}
+      {allUsers.length > 0 && (
+        <Card>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-brand-brown">📊 Estadísticas de Estudiantes</h2>
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => window.location.href = '/dashboard/students'}
+              className="border-brand-green-medium text-brand-green-medium hover:bg-brand-green-light"
+            >
+              Ver Todos
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <h3 className="text-2xl font-bold text-green-600">
+                {allUsers.filter(u => u.status === 'active').length}
+              </h3>
+              <p className="text-green-700 font-medium">Activos</p>
+            </div>
+            <div className="text-center p-4 bg-yellow-50 rounded-lg">
+              <h3 className="text-2xl font-bold text-yellow-600">
+                {allUsers.filter(u => u.status === 'pending').length}
+              </h3>
+              <p className="text-yellow-700 font-medium">Pendientes</p>
+            </div>
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <h3 className="text-2xl font-bold text-blue-600">
+                {allUsers.filter(u => u.tribe && u.tribe.trim() !== '').length}
+              </h3>
+              <p className="text-blue-700 font-medium">Con Tribu</p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Módulos Disponibles */}
+        <Card>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-brand-brown">📚 Módulos Disponibles</h2>
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => window.location.href = '/dashboard/modules'}
+              className="border-brand-green-medium text-brand-green-medium hover:bg-brand-green-light"
+            >
+              Ver Todos
+            </Button>
+          </div>
+          <div className="space-y-3">
+            {loading ? (
+              <div className="text-center py-6 text-gray-500">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green-medium mx-auto mb-2"></div>
+                <p className="text-sm">Cargando módulos...</p>
+              </div>
+            ) : modules.length === 0 ? (
+              <div className="text-center py-6 text-gray-500">
+                <BookOpen className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                <p className="text-sm">No hay módulos disponibles</p>
+                <p className="text-xs">Los módulos aparecerán cuando sean creados</p>
+                <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Debug:</strong> Módulos cargados: {modules.length}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              modules.slice(0, 5).map((module) => (
+                <div key={module.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                      <BookOpen className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium text-brand-brown text-sm">
+                        {module.title || 'Módulo sin título'}
+                      </h3>
+                      <p className="text-xs text-gray-600 line-clamp-2">
+                        {module.description || 'Sin descripción'}
+                      </p>
+                      {module.url && (
+                        <a 
+                          href={module.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-xs text-indigo-600 hover:text-indigo-800 mt-1 inline-block"
+                        >
+                          Ver contenido →
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                      Disponible
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          {modules.length > 5 && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="w-full mt-4 border-brand-green-medium text-brand-green-medium hover:bg-brand-green-light"
+              onClick={() => window.location.href = '/dashboard/modules'}
+            >
+              Ver Todos los Módulos ({modules.length})
+            </Button>
+          )}
+        </Card>
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Mis Clases */}
@@ -435,7 +599,14 @@ export const TeacherDashboard: React.FC = () => {
           {/* Mis Estudiantes */}
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-brand-brown">Mis Estudiantes</h2>
+              <h2 className="text-xl font-bold text-brand-brown">
+                Mis Estudiantes
+                {allUsers.length > 0 && (
+                  <span className="ml-2 text-sm font-normal text-gray-500">
+                    ({allUsers.length} total)
+                  </span>
+                )}
+              </h2>
               <Button 
                 size="sm" 
                 variant="outline"
@@ -459,6 +630,12 @@ export const TeacherDashboard: React.FC = () => {
                   <div className="mt-3 text-xs text-gray-400">
                     <p>Clases del profesor: {myClasses.length}</p>
                     <p>Total de inscripciones: {myStudentClasses?.length || 0}</p>
+                    {allUsers.length > 0 && (
+                      <p className="text-green-600 font-medium">Estudiantes en sistema: {allUsers.length}</p>
+                    )}
+                    {allUsers.length === 0 && (
+                      <p className="text-yellow-600">Sin acceso completo a lista de estudiantes</p>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -545,10 +722,10 @@ export const TeacherDashboard: React.FC = () => {
                 size="sm" 
                 variant="outline" 
                 className="w-full justify-start border-brand-green-medium text-brand-green-medium hover:bg-brand-green-light"
-                onClick={() => window.location.href = '/dashboard/modules/new'}
+                onClick={() => window.location.href = '/dashboard/modules'}
               >
                 <BookOpen className="w-4 h-4 mr-2" />
-                Crear Módulo
+                Ver Módulos
               </Button>
               <Button 
                 size="sm" 
