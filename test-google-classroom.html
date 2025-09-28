@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba Google Classroom - HappyTribe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .button {
+            background-color: #4B8B3B;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 16px;
+        }
+        .button:hover {
+            background-color: #3F6E2B;
+        }
+        .button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #4B8B3B;
+            background-color: #f0f8f0;
+        }
+        .error {
+            border-left-color: #dc2626;
+            background-color: #fef2f2;
+        }
+        .success {
+            border-left-color: #10b981;
+            background-color: #f0fdf4;
+        }
+        .info {
+            border-left-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .courses-list {
+            margin-top: 20px;
+        }
+        .course-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Prueba Google Classroom - HappyTribe</h1>
+        
+        <!-- Login Section -->
+        <div id="loginSection">
+            <h2>1. Iniciar Sesión</h2>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" value="admin@test.com">
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña:</label>
+                <input type="password" id="password" value="admin123">
+            </div>
+            <button class="button" onclick="login()">Iniciar Sesión</button>
+        </div>
+
+        <!-- Main Section -->
+        <div id="mainSection" class="hidden">
+            <h2>2. Google Classroom Integration</h2>
+            
+            <div id="statusDiv" class="status info">
+                Verificando estado de conexión...
+            </div>
+
+            <div id="actionsDiv">
+                <button class="button" onclick="checkStatus()">Verificar Estado</button>
+                <button class="button" onclick="connectGoogle()">Conectar con Google</button>
+                <button class="button" onclick="loadCourses()">Cargar Cursos</button>
+            </div>
+
+            <!-- Assignment Form -->
+            <div id="assignmentForm" class="hidden">
+                <h3>Crear Nueva Tarea</h3>
+                <div class="form-group">
+                    <label for="courseId">Curso:</label>
+                    <select id="courseId">
+                        <option value="">Selecciona un curso</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="title">Título:</label>
+                    <input type="text" id="title" placeholder="Título de la tarea">
+                </div>
+                <div class="form-group">
+                    <label for="description">Descripción:</label>
+                    <textarea id="description" rows="4" placeholder="Descripción de la tarea"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="dueDate">Fecha de Vencimiento:</label>
+                    <input type="datetime-local" id="dueDate">
+                </div>
+                <div class="form-group">
+                    <label for="maxPoints">Puntos Máximos:</label>
+                    <input type="number" id="maxPoints" value="100" min="1">
+                </div>
+                <button class="button" onclick="createAssignment()">Crear Tarea</button>
+                <button class="button" onclick="toggleAssignmentForm()">Cancelar</button>
+            </div>
+
+            <button class="button" onclick="toggleAssignmentForm()">Crear Tarea</button>
+
+            <!-- Courses List -->
+            <div id="coursesList" class="courses-list hidden">
+                <h3>Cursos de Google Classroom</h3>
+                <div id="coursesContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://happytribe-backend-08a2fb6f96ac.herokuapp.com';
+        let token = localStorage.getItem('token');
+        let courses = [];
+
+        // Check if already logged in
+        if (token) {
+            showMainSection();
+            checkStatus();
+        }
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    token = data.token;
+                    localStorage.setItem('token', token);
+                    showMainSection();
+                    checkStatus();
+                    showStatus('Login exitoso!', 'success');
+                } else {
+                    showStatus(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error de conexión: ${error.message}`, 'error');
+            }
+        }
+
+        function showMainSection() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('mainSection').classList.remove('hidden');
+        }
+
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('statusDiv');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        async function checkStatus() {
+            if (!token) {
+                showStatus('No hay token de autenticación', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/google-classroom/status`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.connected) {
+                        showStatus(`Conectado a Google Classroom. Expira: ${new Date(data.expiresAt).toLocaleString()}`, 'success');
+                    } else {
+                        showStatus('No conectado a Google Classroom', 'info');
+                    }
+                } else {
+                    showStatus(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error de conexión: ${error.message}`, 'error');
+            }
+        }
+
+        async function connectGoogle() {
+            if (!token) {
+                showStatus('No hay token de autenticación', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/google-classroom/auth-url`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showStatus('Redirigiendo a Google para autorización...', 'info');
+                    window.open(data.authUrl, '_blank');
+                } else {
+                    showStatus(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error de conexión: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadCourses() {
+            if (!token) {
+                showStatus('No hay token de autenticación', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/google-classroom/courses`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    courses = data.courses || [];
+                    displayCourses();
+                    updateCourseSelect();
+                    showStatus(`Cargados ${courses.length} cursos`, 'success');
+                } else {
+                    showStatus(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error de conexión: ${error.message}`, 'error');
+            }
+        }
+
+        function displayCourses() {
+            const container = document.getElementById('coursesContainer');
+            const coursesList = document.getElementById('coursesList');
+            
+            if (courses.length === 0) {
+                container.innerHTML = '<p>No hay cursos disponibles</p>';
+            } else {
+                container.innerHTML = courses.map(course => `
+                    <div class="course-item">
+                        <h4>${course.name}</h4>
+                        <p><strong>Sección:</strong> ${course.section}</p>
+                        <p><strong>Estado:</strong> ${course.courseState}</p>
+                        <p><strong>Código:</strong> ${course.enrollmentCode}</p>
+                        <p><strong>Creado:</strong> ${new Date(course.creationTime).toLocaleString()}</p>
+                        <a href="${course.alternateLink}" target="_blank" class="button">Abrir en Google Classroom</a>
+                    </div>
+                `).join('');
+            }
+            
+            coursesList.classList.remove('hidden');
+        }
+
+        function updateCourseSelect() {
+            const select = document.getElementById('courseId');
+            select.innerHTML = '<option value="">Selecciona un curso</option>';
+            courses.forEach(course => {
+                const option = document.createElement('option');
+                option.value = course.id;
+                option.textContent = `${course.name} - ${course.section}`;
+                select.appendChild(option);
+            });
+        }
+
+        function toggleAssignmentForm() {
+            const form = document.getElementById('assignmentForm');
+            form.classList.toggle('hidden');
+        }
+
+        async function createAssignment() {
+            const courseId = document.getElementById('courseId').value;
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+            const dueDate = document.getElementById('dueDate').value;
+            const maxPoints = document.getElementById('maxPoints').value;
+
+            if (!courseId || !title || !description) {
+                showStatus('Por favor completa todos los campos requeridos', 'error');
+                return;
+            }
+
+            if (!token) {
+                showStatus('No hay token de autenticación', 'error');
+                return;
+            }
+
+            try {
+                const assignmentData = {
+                    courseId,
+                    title,
+                    description,
+                    maxPoints: parseInt(maxPoints)
+                };
+
+                if (dueDate) {
+                    assignmentData.dueDate = new Date(dueDate).toISOString();
+                }
+
+                // Note: This would need a real classId from HappyTribe
+                const classId = 'example-class-id';
+                
+                const response = await fetch(`${API_BASE}/api/google-classroom/create-assignment/${classId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(assignmentData)
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showStatus('Tarea creada exitosamente!', 'success');
+                    toggleAssignmentForm();
+                } else {
+                    showStatus(`Error: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error de conexión: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

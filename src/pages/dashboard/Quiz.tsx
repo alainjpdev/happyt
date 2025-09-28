@@ -78,13 +78,15 @@ export const Quiz: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [quizzesRes, modulesRes] = await Promise.all([
-        apiClient.get('/api/quiz'),
-        apiClient.get('/api/modules')
-      ]);
       
-      setQuizzes(quizzesRes.data || []);
+      // Solo cargar módulos ya que no existe endpoint de quiz
+      const modulesRes = await apiClient.get('/api/modules');
       setModules(modulesRes.data || []);
+      
+      // Los quizzes se manejan localmente por ahora
+      setQuizzes([]);
+      
+      console.log('📚 Módulos cargados para quiz:', modulesRes.data?.length || 0);
     } catch (error) {
       console.error('Error loading data:', error);
       showToast('Error al cargar los datos', 'error');
@@ -213,6 +215,17 @@ export const Quiz: React.FC = () => {
           <Plus className="w-5 h-5" />
           Nuevo Cuestionario
         </Button>
+      </div>
+
+      {/* En Desarrollo Banner */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center">
+        <AlertCircle className="w-6 h-6 text-yellow-600 mr-3" />
+        <div>
+          <h3 className="font-semibold text-yellow-800">🚧 Funcionalidad en Desarrollo</h3>
+          <p className="text-yellow-700 text-sm mt-1">
+            La gestión de cuestionarios está siendo desarrollada. Pronto podrás crear, editar y administrar quizzes del sistema.
+          </p>
+        </div>
       </div>
 
       {/* Stats Cards */}

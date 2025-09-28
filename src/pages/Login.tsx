@@ -15,36 +15,20 @@ export const Login = () => {
 
     const { register, handleSubmit, formState: { errors } } = useForm();
     const onSubmit = async (data: any) => {
-        console.log('🔐 Submit ejecutado', data);
         setIsLoading(true);
         setError('');
         try {
-            console.log('🔄 Llamando a login...');
             await login(data.email, data.password);
-            console.log('✅ Login exitoso, preparando redirect...');
-            
-            // Agregar delay para poder ver los logs
-            console.log('⏳ Esperando 2 segundos para ver logs...');
-            await new Promise(resolve => setTimeout(resolve, 2000));
             
             // Redirigir a la página solicitada o al dashboard
             const from = location.state?.from?.pathname || '/dashboard';
-            console.log('🎯 Redirigiendo a:', from);
             navigate(from, { replace: true });
-            console.log('🚀 Redirect ejecutado');
         }
         catch (err: any) {
-            console.error('❌ Error en login:', err);
-            console.error('❌ Error completo:', err);
-            
-            // Mostrar error en alert para poder verlo
             const errorMessage = err.message || 'Error al iniciar sesión';
-            alert(`ERROR EN LOGIN: ${errorMessage}`);
-            
             setError(errorMessage);
         }
         finally {
-            console.log('🏁 Finalizando proceso de login');
             setIsLoading(false);
         }
     };

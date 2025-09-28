@@ -52,8 +52,8 @@ export const getEnvironmentConfig = (): EnvironmentConfig => {
     // Si hay una variable de entorno específica, usarla
     googleRedirectURI = import.meta.env.VITE_GOOGLE_REDIRECT_URI;
   } else if (isProduction) {
-    // Producción - usar Vercel
-    googleRedirectURI = 'https://happytribe.vercel.app/dashboard/todo';
+    // Producción - usar Heroku backend callback
+    googleRedirectURI = 'https://happytribe-backend-08a2fb6f96ac.herokuapp.com/api/google-classroom/callback';
   } else if (isDevelopment) {
     // Desarrollo - usar localhost (puerto 5174 si 5173 está ocupado)
     googleRedirectURI = 'http://localhost:5174/auth/google/callback';
@@ -77,18 +77,13 @@ export const getEnvironmentConfig = (): EnvironmentConfig => {
     environment
   };
   
-  // Log de la configuración para debugging
-  console.log('🔧 Configuración del entorno:', {
-    hostname,
-    environment,
-    backendURL,
-    frontendURL,
-    googleRedirectURI,
-    hasGoogleClientId: !!googleClientId,
-    hasGoogleClientSecret: !!googleClientSecret,
-    isDevelopment,
-    isProduction
-  });
+  // Log solo si hay problemas de configuración
+  if (!googleClientId || !googleClientSecret) {
+    console.warn('⚠️ Configuración de Google incompleta:', {
+      hasGoogleClientId: !!googleClientId,
+      hasGoogleClientSecret: !!googleClientSecret
+    });
+  }
   
   return config;
 };

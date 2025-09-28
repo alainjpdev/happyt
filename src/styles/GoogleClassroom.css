@@ -1,224 +1,433 @@
-/* Estilos para la integración de Google Classroom */
+/* Google Classroom Integration Styles */
+
 .google-classroom-integration {
-  padding: 20px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  margin: 20px 0;
-  background-color: #ffffff;
+  @apply space-y-6;
 }
 
-.google-classroom-integration .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #e5e7eb;
+.google-classroom-setup {
+  @apply max-w-2xl mx-auto;
 }
 
-.google-classroom-integration .error {
-  background-color: #fef2f2;
-  color: #dc2626;
-  padding: 12px;
-  border-radius: 6px;
-  margin: 10px 0;
-  border: 1px solid #fecaca;
+.google-classroom-setup .card {
+  @apply p-8 text-center;
 }
 
-.google-classroom-integration .sync-status {
-  background-color: #f0fdf4;
-  color: #166534;
-  padding: 12px;
-  border-radius: 6px;
-  margin: 10px 0;
-  border: 1px solid #bbf7d0;
+.google-classroom-setup .icon {
+  @apply w-16 h-16 mx-auto mb-4;
+  color: #4B8B3B;
 }
 
-.classes-section {
-  margin-top: 20px;
+.google-classroom-setup h2 {
+  @apply text-2xl font-bold mb-2;
+  color: #6A3A1E;
 }
 
-.classes-section h4 {
-  color: #374151;
-  margin-bottom: 15px;
-  font-size: 1.125rem;
-  font-weight: 600;
+.google-classroom-setup p {
+  color: #9CA3AF;
 }
 
-.classes-list {
-  margin-top: 15px;
-  display: grid;
-  gap: 15px;
+.google-classroom-setup .btn {
+  @apply text-white px-6 py-3 rounded-lg font-medium;
+  background-color: #4B8B3B;
 }
 
-.class-item {
-  border: 1px solid #e5e7eb;
-  padding: 20px;
-  border-radius: 8px;
-  background-color: #f9fafb;
-  transition: all 0.2s ease;
+.google-classroom-setup .btn:hover {
+  background-color: #3F6E2B;
 }
 
-.class-item:hover {
-  border-color: #3b82f6;
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+.google-classroom-header {
+  @apply flex items-center justify-between;
 }
 
-.class-item h5 {
-  margin: 0 0 8px 0;
-  color: #111827;
-  font-size: 1.125rem;
-  font-weight: 600;
+.google-classroom-header h1 {
+  @apply text-3xl font-bold flex items-center;
+  color: #6A3A1E;
 }
 
-.class-item p {
-  margin: 0 0 15px 0;
-  color: #6b7280;
-  font-size: 0.875rem;
+.google-classroom-header .icon {
+  @apply w-8 h-8 mr-3;
+  color: #4B8B3B;
 }
 
-.class-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
+.google-classroom-header p {
+  @apply mt-1;
+  color: #9CA3AF;
 }
 
-.class-details {
-  margin-top: 25px;
-  padding: 20px;
-  background-color: #f8fafc;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
+.google-classroom-status {
+  @apply p-6;
 }
 
-.class-details h4 {
-  color: #1e293b;
-  margin-bottom: 20px;
-  font-size: 1.25rem;
-  font-weight: 600;
+.google-classroom-status .status-info {
+  @apply flex items-center;
 }
 
-.students-section,
-.assignments-section {
-  margin: 20px 0;
+.google-classroom-status .status-icon {
+  @apply w-6 h-6 mr-3;
+  color: #10B981;
 }
 
-.students-section h5,
-.assignments-section h5 {
-  color: #374151;
-  margin-bottom: 12px;
-  font-size: 1rem;
-  font-weight: 600;
+.google-classroom-status h3 {
+  @apply font-semibold;
+  color: #6A3A1E;
 }
 
-.students-section ul,
-.assignments-section ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.google-classroom-status .status-text {
+  @apply text-sm;
+  color: #9CA3AF;
 }
 
-.students-section li,
-.assignments-section li {
-  padding: 12px;
-  margin: 8px 0;
-  background-color: white;
-  border-radius: 6px;
-  border: 1px solid #e5e7eb;
-  transition: all 0.2s ease;
+.google-classroom-status .status-badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  background-color: #D1FAE5;
+  color: #065F46;
 }
 
-.students-section li:hover,
-.assignments-section li:hover {
-  border-color: #3b82f6;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+.google-classroom-actions {
+  @apply flex flex-wrap gap-4;
 }
 
-.assignments-section li strong {
-  color: #111827;
-  font-weight: 600;
+.google-classroom-actions .btn {
+  @apply flex items-center;
 }
 
-.assignments-section li p {
-  margin: 8px 0;
-  color: #6b7280;
-  font-size: 0.875rem;
+.google-classroom-actions .btn .icon {
+  @apply w-4 h-4 mr-2;
 }
 
-.assignments-section li small {
-  color: #9ca3af;
-  font-size: 0.75rem;
+.google-classroom-actions .btn-primary {
+  @apply text-white;
+  background-color: #4B8B3B;
 }
 
-/* Botones */
-.btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.google-classroom-actions .btn-primary:hover {
+  background-color: #3F6E2B;
 }
 
-.btn-primary {
-  background-color: #3b82f6;
-  color: white;
+.google-classroom-actions .btn-secondary {
+  @apply text-white;
+  background-color: #3B82F6;
 }
 
-.btn-primary:hover:not(:disabled) {
-  background-color: #2563eb;
+.google-classroom-actions .btn-secondary:hover {
+  background-color: #2563EB;
 }
 
-.btn-secondary {
-  background-color: #6b7280;
-  color: white;
+.google-classroom-actions .btn-light {
+  @apply text-white;
+  background-color: #A5C64C;
 }
 
-.btn-secondary:hover:not(:disabled) {
-  background-color: #4b5563;
+.google-classroom-actions .btn-light:hover {
+  background-color: #4B8B3B;
 }
 
-.btn-success {
-  background-color: #10b981;
-  color: white;
+.google-classroom-form {
+  @apply p-6;
 }
 
-.btn-success:hover:not(:disabled) {
-  background-color: #059669;
+.google-classroom-form h3 {
+  @apply text-lg font-semibold mb-4;
+  color: #6A3A1E;
 }
 
-.btn-sm {
-  padding: 6px 12px;
-  font-size: 12px;
+.google-classroom-form .form-group {
+  @apply space-y-4;
 }
 
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.google-classroom-form .form-field {
+  @apply block;
 }
 
-/* Estados de carga */
-.loading {
-  opacity: 0.7;
-  pointer-events: none;
+.google-classroom-form label {
+  @apply block text-sm font-medium mb-2;
+  color: #6A3A1E;
 }
 
-/* Responsive */
+.google-classroom-form input,
+.google-classroom-form select,
+.google-classroom-form textarea {
+  @apply w-full px-3 py-2 border rounded-lg;
+  border-color: #D1D5DB;
+}
+
+.google-classroom-form input:focus,
+.google-classroom-form select:focus,
+.google-classroom-form textarea:focus {
+  @apply outline-none ring-2 ring-offset-2;
+  ring-color: #4B8B3B;
+  border-color: transparent;
+}
+
+.google-classroom-form .form-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
+
+.google-classroom-form .form-actions {
+  @apply flex justify-end space-x-3;
+}
+
+.google-classroom-form .btn-cancel {
+  @apply text-white;
+  background-color: #6B7280;
+}
+
+.google-classroom-form .btn-cancel:hover {
+  background-color: #4B5563;
+}
+
+.google-classroom-form .btn-submit {
+  @apply text-white;
+  background-color: #4B8B3B;
+}
+
+.google-classroom-form .btn-submit:hover {
+  background-color: #3F6E2B;
+}
+
+.google-classroom-courses {
+  @apply p-6;
+}
+
+.google-classroom-courses h3 {
+  @apply text-lg font-semibold mb-4 flex items-center;
+  color: #6A3A1E;
+}
+
+.google-classroom-courses .icon {
+  @apply w-5 h-5 mr-2;
+}
+
+.google-classroom-courses .courses-count {
+  color: #9CA3AF;
+}
+
+.google-classroom-courses .courses-grid {
+  @apply grid gap-4;
+}
+
+.google-classroom-courses .course-item {
+  @apply border rounded-lg p-4 hover:shadow-md transition-shadow;
+  border-color: #E5E7EB;
+}
+
+.google-classroom-courses .course-header {
+  @apply flex items-start justify-between;
+}
+
+.google-classroom-courses .course-info {
+  @apply flex-1;
+}
+
+.google-classroom-courses .course-title {
+  @apply font-semibold text-lg;
+  color: #6A3A1E;
+}
+
+.google-classroom-courses .course-section {
+  @apply text-sm mb-2;
+  color: #9CA3AF;
+}
+
+.google-classroom-courses .course-meta {
+  @apply flex items-center space-x-4 text-sm;
+  color: #9CA3AF;
+}
+
+.google-classroom-courses .course-meta .icon {
+  @apply w-4 h-4 mr-1;
+}
+
+.google-classroom-courses .course-code {
+  @apply text-xs mt-2;
+  color: #9CA3AF;
+}
+
+.google-classroom-courses .course-code .code {
+  @apply font-mono px-2 py-1 rounded;
+  background-color: #F3F4F6;
+}
+
+.google-classroom-courses .course-actions {
+  @apply flex items-center space-x-2;
+}
+
+.google-classroom-courses .btn-open {
+  @apply inline-flex items-center px-3 py-1 rounded-lg transition-colors text-sm;
+  background-color: #A5C64C;
+  color: #3F6E2B;
+}
+
+.google-classroom-courses .btn-open:hover {
+  background-color: #4B8B3B;
+  color: #FFFFFF;
+}
+
+.google-classroom-courses .btn-open .icon {
+  @apply w-4 h-4 mr-1;
+}
+
+/* Message Styles */
+.google-classroom-message {
+  @apply rounded-lg p-4 flex items-center;
+}
+
+.google-classroom-message.error {
+  background-color: #FEF2F2;
+  border-color: #FECACA;
+  border-width: 1px;
+}
+
+.google-classroom-message.success {
+  background-color: #F0FDF4;
+  border-color: #BBF7D0;
+  border-width: 1px;
+}
+
+.google-classroom-message .icon {
+  @apply w-5 h-5 mr-3;
+}
+
+.google-classroom-message.error .icon {
+  color: #EF4444;
+}
+
+.google-classroom-message.success .icon {
+  color: #10B981;
+}
+
+.google-classroom-message.error .text {
+  color: #B91C1C;
+}
+
+.google-classroom-message.success .text {
+  color: #065F46;
+}
+
+/* Loading States */
+.google-classroom-loading {
+  @apply flex items-center justify-center p-8;
+}
+
+.google-classroom-loading .spinner {
+  @apply animate-spin rounded-full h-8 w-8 border-b-2;
+  border-color: #4B8B3B;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
+  .google-classroom-header {
+    @apply flex-col items-start space-y-4;
+  }
+  
+  .google-classroom-actions {
+    @apply flex-col;
+  }
+  
+  .google-classroom-actions .btn {
+    @apply w-full justify-center;
+  }
+  
+  .google-classroom-courses .course-header {
+    @apply flex-col space-y-4;
+  }
+  
+  .google-classroom-courses .course-actions {
+    @apply w-full justify-center;
+  }
+  
+  .google-classroom-form .form-actions {
+    @apply flex-col;
+  }
+  
+  .google-classroom-form .form-actions .btn {
+    @apply w-full;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
   .google-classroom-integration {
-    padding: 15px;
+    color: #FFFFFF;
   }
   
-  .class-actions {
-    flex-direction: column;
+  .google-classroom-setup .card {
+    background-color: #1F2937;
+    border-color: #374151;
   }
   
-  .btn {
-    width: 100%;
-    justify-content: center;
+  .google-classroom-courses .course-item {
+    background-color: #1F2937;
+    border-color: #374151;
   }
+  
+  .google-classroom-form input,
+  .google-classroom-form select,
+  .google-classroom-form textarea {
+    background-color: #374151;
+    border-color: #4B5563;
+    color: #FFFFFF;
+  }
+}
+
+/* Animation Classes */
+.google-classroom-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.google-classroom-slide-in {
+  animation: slideIn 0.3s ease-in-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Focus States */
+.google-classroom-integration .btn:focus {
+  @apply outline-none ring-2 ring-offset-2;
+  ring-color: #4B8B3B;
+}
+
+.google-classroom-integration input:focus,
+.google-classroom-integration select:focus,
+.google-classroom-integration textarea:focus {
+  @apply outline-none ring-2 ring-offset-2;
+  ring-color: #4B8B3B;
+}
+
+/* Hover Effects */
+.google-classroom-courses .course-item:hover {
+  @apply shadow-lg transform scale-105;
+}
+
+.google-classroom-actions .btn:hover {
+  @apply transform scale-105;
+}
+
+/* Disabled States */
+.google-classroom-integration .btn:disabled {
+  @apply opacity-50 cursor-not-allowed transform-none;
+}
+
+.google-classroom-integration .btn:disabled:hover {
+  @apply transform-none;
 }

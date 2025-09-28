@@ -36,22 +36,8 @@ apiClient.interceptors.request.use(
         }
       }
       
-      console.log('🔑 Token encontrado para API:', token ? 'SÍ' : 'NO');
-      console.log('🔑 Token value:', token ? `${token.substring(0, 20)}...` : 'null');
-      console.log('🔑 Token completo (primeros 50 chars):', token ? token.substring(0, 50) : 'null');
-      console.log('🔑 URL de la petición:', config.url);
-      console.log('🔑 Estado del store:', { 
-        hasToken: !!authState.token, 
-        isAuthenticated: authState.isAuthenticated,
-        userEmail: authState.user?.email 
-      });
-      
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
-        console.log('✅ Token agregado a headers de la petición');
-      } else {
-        console.warn('⚠️ No se encontró token para la petición');
-        console.warn('⚠️ Estado del store:', authState);
       }
     } catch (error) {
       console.error('❌ Error obteniendo token:', error);
@@ -68,7 +54,6 @@ apiClient.interceptors.request.use(
 // Interceptor para manejar respuestas y errores
 apiClient.interceptors.response.use(
   (response) => {
-    console.log('✅ Respuesta API exitosa:', response.config.url);
     return response;
   },
   (error) => {

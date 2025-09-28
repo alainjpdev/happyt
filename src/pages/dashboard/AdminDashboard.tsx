@@ -27,81 +27,51 @@ export const AdminDashboard: React.FC = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        console.log('🔍 Cargando datos del dashboard...');
-        console.log('🔐 Estado de autenticación:', { isAuthenticated, hasToken: !!token, user: user?.email });
-        console.log('🔑 Token completo:', token);
-        console.log('👤 Usuario completo:', user);
-        console.log('👤 Rol del usuario:', user?.role);
-        console.log('👤 Status del usuario:', user?.status);
-        
-        // Verificar el token en localStorage también
-        const localToken = localStorage.getItem('token');
-        console.log('🔑 Token en localStorage:', localToken);
-        console.log('🔑 Tokens coinciden:', token === localToken);
-        
         if (!isAuthenticated || !token) {
-          console.warn('⚠️ Usuario no autenticado, no se pueden cargar los datos');
           return;
         }
         
         // Verificar que el token no esté expirado usando la función de utilidad
         const isTokenValid = await checkAndRefreshToken();
         if (!isTokenValid) {
-          console.warn('⚠️ Token inválido o expirado, no se pueden cargar los datos');
           return;
         }
         
         // Usar exactamente el mismo código que funciona en la página de Usuarios
-        console.log('🔄 Haciendo petición a /api/users (método de Users.tsx)...');
         let usersRes;
         try {
           usersRes = await apiClient.get('/api/users');
-          console.log('🔍 Respuesta del API /api/users:', usersRes.data);
-          console.log('🔍 Tipo de datos:', typeof usersRes.data);
-          console.log('🔍 Es array?', Array.isArray(usersRes.data));
           
           // El backend devuelve un objeto con users array
           const usersArray = usersRes.data.users || usersRes.data;
           
           if (Array.isArray(usersArray)) {
-            console.log('✅ Usuarios encontrados:', usersArray.length);
             usersRes = { data: usersArray }; // Normalizar la respuesta
           } else {
-            console.error('❌ Error: No se encontró array de usuarios:', usersRes.data);
             usersRes = { data: [] };
           }
         } catch (error) {
-          console.error('❌ Error obteniendo usuarios:', error);
           usersRes = { data: [] };
         }
         
-        console.log('🔄 Haciendo petición a /api/classes...');
         let classesRes;
         try {
           classesRes = await apiClient.get('/api/classes');
-          console.log('✅ /api/classes exitosa');
         } catch (error) {
-          console.error('❌ Error en /api/classes:', error.response?.status, error.response?.data);
           classesRes = { data: [] };
         }
         
-        console.log('🔄 Haciendo petición a /api/modules...');
         let modulesRes;
         try {
           modulesRes = await apiClient.get('/api/modules');
-          console.log('✅ /api/modules exitosa');
         } catch (error) {
-          console.error('❌ Error en /api/modules:', error.response?.status, error.response?.data);
           modulesRes = { data: [] };
         }
         
-        console.log('🔄 Haciendo petición a /api/assignments...');
         let assignmentsRes;
         try {
           assignmentsRes = await apiClient.get('/api/assignments');
-          console.log('✅ /api/assignments exitosa');
         } catch (error) {
-          console.error('❌ Error en /api/assignments:', error.response?.status, error.response?.data);
           assignmentsRes = { data: [] };
         }
         
@@ -115,12 +85,6 @@ export const AdminDashboard: React.FC = () => {
         setClasses(Array.isArray(classesArray) ? classesArray : []);
         setModules(Array.isArray(modulesArray) ? modulesArray : []);
         setAssignments(Array.isArray(assignmentsArray) ? assignmentsArray : []);
-        
-        console.log('✅ Datos cargados exitosamente');
-        console.log('👥 Usuarios:', usersArray?.length || 0, usersArray);
-        console.log('📚 Clases:', classesArray?.length || 0, classesArray);
-        console.log('📖 Módulos:', modulesArray?.length || 0, modulesArray);
-        console.log('📝 Asignaciones:', assignmentsArray?.length || 0, assignmentsArray);
       } catch (error) {
         console.error('❌ Error cargando datos:', error);
         // Manejar errores de autenticación

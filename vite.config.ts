@@ -8,6 +8,6 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
   define: {
-    'import.meta.env.VITE_API_URL': JSON.stringify('https://happytribe.vercel.app'),
+    'import.meta.env.VITE_API_URL': JSON.stringify(process.env.NODE_ENV === 'production' ? 'https://happytribe-backend-08a2fb6f96ac.herokuapp.com' : 'https://happytribe-backend-08a2fb6f96ac.herokuapp.com'),
   },
 });

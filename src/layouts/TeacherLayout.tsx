@@ -24,7 +24,7 @@ export const TeacherLayout: React.FC = () => {
     { to: '/dashboard/modules', icon: BookOpen, label: 'Módulos' },
     { to: '/dashboard/materials', icon: FileText, label: 'Materiales' },
     { to: '/dashboard/assignments', icon: ClipboardList, label: 'Tareas' },
-    { to: '/dashboard/reports', icon: BarChart3, label: 'Reportes' },
+    // { to: '/dashboard/reports', icon: BarChart3, label: 'Reportes' }, // Oculto temporalmente
     { to: '/dashboard/profile', icon: User, label: 'Mi Perfil' }
   ];
 
@@ -71,9 +71,9 @@ export const TeacherLayout: React.FC = () => {
                     {user?.firstName} {user?.lastName}
                   </p>
                   <p className="text-xs text-text-secondary capitalize">
-                    {user?.role === 'user' ? 'Usuario' : 
-                     user?.role === 'coordinator' ? 'Coordinador' : 
-                     user?.role === 'admin' ? 'Administrador' : user?.role}
+                    {user?.role === 'admin' ? 'Administrador' : 
+                     user?.role === 'teacher' ? 'Profesor' : 
+                     user?.role === 'student' ? 'Estudiante' : user?.role}
                   </p>
                 </div>
               )}

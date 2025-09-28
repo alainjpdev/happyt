@@ -78,13 +78,15 @@ export const Exams: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [examsRes, modulesRes] = await Promise.all([
-        apiClient.get('/api/exams'),
-        apiClient.get('/api/modules')
-      ]);
       
-      setExams(examsRes.data || []);
+      // Solo cargar módulos ya que no existe endpoint de exámenes
+      const modulesRes = await apiClient.get('/api/modules');
       setModules(modulesRes.data || []);
+      
+      // Los exámenes se manejan localmente por ahora
+      setExams([]);
+      
+      console.log('📚 Módulos cargados para exámenes:', modulesRes.data?.length || 0);
     } catch (error) {
       console.error('Error loading data:', error);
       showToast('Error al cargar los datos', 'error');
@@ -221,6 +223,17 @@ export const Exams: React.FC = () => {
           <Plus className="w-5 h-5" />
           Nuevo Examen
         </Button>
+      </div>
+
+      {/* En Desarrollo Banner */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center">
+        <AlertCircle className="w-6 h-6 text-yellow-600 mr-3" />
+        <div>
+          <h3 className="font-semibold text-yellow-800">🚧 Funcionalidad en Desarrollo</h3>
+          <p className="text-yellow-700 text-sm mt-1">
+            La gestión de exámenes está siendo desarrollada. Pronto podrás crear, editar y administrar exámenes del sistema.
+          </p>
+        </div>
       </div>
 
       {/* Stats Cards */}

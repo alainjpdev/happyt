@@ -1,0 +1,387 @@
+
+# 🔗 Frontend Google Integration Guide
+
+## 📋 **RESUMEN DE IMPLEMENTACIÓN ACTUAL**
+
+El backend tiene un **sistema unificado de autenticación Google** que maneja múltiples servicios (Classroom, Sheets, Drive, General) con refresh automático de tokens.
+
+---
+
+## 🚀 **ENDPOINTS DISPONIBLES**
+
+### **🔐 Autenticación Unificada**
+
+#### **1. Obtener URL de Autorización**
+```http
+GET /api/google/auth-url/{service}
+Authorization: Bearer {JWT_TOKEN}
+```
+
+**Servicios disponibles:**
+- `classroom` - Google Classroom
+- `sheets` - Google Sheets  
+- `drive` - Google Drive
+- `general` - Información básica del usuario
+
+**Respuesta:**
+```json
+{
+  "authUrl": "https://accounts.google.com/o/oauth2/v2/auth?...",
+  "service": "classroom",
+  "message": "Authorization URL generated for classroom"
+}
+```
+
+#### **2. Callback de OAuth (Automático)**
+```http
+GET /api/google/callback?code={CODE}&state={USER_ID:SERVICE}
+```
+- **No requiere autenticación** (Google redirige aquí)
+- **Redirige automáticamente** al frontend con resultado
+
+#### **3. Estado de Conexión**
+```http
+GET /api/google/status/{service}
+Authorization: Bearer {JWT_TOKEN}
+```
+
+**Respuesta:**
+```json
+{
+  "connected": true,
+  "service": "classroom",
+  "expiresAt": "2025-09-29T18:30:00.000Z",
+  "scopes": "https://www.googleapis.com/auth/classroom.courses ..."
+}
+```
+
+#### **4. Información del Usuario Google**
+```http
+GET /api/google/user-info
+Authorization: Bearer {JWT_TOKEN}
+```
+
+#### **5. Revocar Acceso**
+```http
+DELETE /api/google/revoke
+Authorization: Bearer {JWT_TOKEN}
+```
+
+#### **6. Listar Servicios**
+```http
+GET /api/google/services
+```
+
+---
+
+### **🎓 Google Classroom Específico**
+
+#### **1. Obtener Cursos**
+```http
+GET /api/google-classroom/courses
+Authorization: Bearer {JWT_TOKEN}
+```
+
+#### **2. Sincronizar Clase**
+```http
+POST /api/google-classroom/sync-class/{classId}
+Authorization: Bearer {JWT_TOKEN}
+```
+
+#### **3. Sincronizar Estudiantes**
+```http
+POST /api/google-classroom/sync-students/{classId}
+Authorization: Bearer {JWT_TOKEN}
+Content-Type: application/json
+
+{
+  "courseId": "google_classroom_course_id"
+}
+```
+
+#### **4. Crear Tarea**
+```http
+POST /api/google-classroom/create-assignment/{classId}
+Authorization: Bearer {JWT_TOKEN}
+Content-Type: application/json
+
+{
+  "courseId": "google_classroom_course_id",
+  "title": "Título de la tarea",
+  "description": "Descripción de la tarea",
+  "dueDate": "2025-10-01T23:59:59.000Z",
+  "maxPoints": 100
+}
+```
+
+#### **5. Estado de Conexión Classroom**
+```http
+GET /api/google-classroom/status
+Authorization: Bearer {JWT_TOKEN}
+```
+
+---
+
+## 🔧 **IMPLEMENTACIÓN EN EL FRONTEND**
+
+### **1. Flujo de Autenticación**
+
+```javascript
+// 1. Obtener URL de autorización
+const response = await fetch('/api/google/auth-url/classroom', {
+  headers: {
+    'Authorization': `Bearer ${userToken}`
+  }
+});
+const { authUrl } = await response.json();
+
+// 2. Redirigir al usuario a Google
+window.location.href = authUrl;
+
+// 3. Google redirige automáticamente al callback del backend
+// 4. El backend redirige de vuelta al frontend con resultado
+```
+
+### **2. Manejo del Callback**
+
+El backend redirige automáticamente a:
+```
+https://happytribe.vercel.app/google-classroom?success=true&service=classroom
+```
+
+**Manejo en el frontend:**
+```javascript
+// En la página de Google Classroom
+useEffect(() => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const success = urlParams.get('success');
+  const service = urlParams.get('service');
+  
+  if (success === 'true') {
+    // Mostrar mensaje de éxito
+    // Actualizar estado de conexión
+    // Recargar datos si es necesario
+  } else if (urlParams.get('error') === 'true') {
+    // Mostrar mensaje de error
+  }
+}, []);
+```
+
+### **3. Verificar Estado de Conexión**
+
+```javascript
+const checkGoogleConnection = async (service) => {
+  try {
+    const response = await fetch(`/api/google/status/${service}`, {
+      headers: {
+        'Authorization': `Bearer ${userToken}`
+      }
+    });
+    const status = await response.json();
+    return status.connected;
+  } catch (error) {
+    console.error('Error checking connection:', error);
+    return false;
+  }
+};
+```
+
+### **4. Obtener Cursos de Google Classroom**
+
+```javascript
+const getGoogleCourses = async () => {
+  try {
+    const response = await fetch('/api/google-classroom/courses', {
+      headers: {
+        'Authorization': `Bearer ${userToken}`
+      }
+    });
+    const { courses } = await response.json();
+    return courses;
+  } catch (error) {
+    console.error('Error fetching courses:', error);
+    return [];
+  }
+};
+```
+
+### **5. Sincronizar Clase con Google Classroom**
+
+```javascript
+const syncClassWithGoogle = async (classId) => {
+  try {
+    const response = await fetch(`/api/google-classroom/sync-class/${classId}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${userToken}`
+      }
+    });
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Error syncing class:', error);
+    throw error;
+  }
+};
+```
+
+### **6. Crear Tarea en Google Classroom**
+
+```javascript
+const createGoogleAssignment = async (classId, assignmentData) => {
+  try {
+    const response = await fetch(`/api/google-classroom/create-assignment/${classId}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${userToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(assignmentData)
+    });
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Error creating assignment:', error);
+    throw error;
+  }
+};
+```
+
+---
+
+## 🎯 **COMPONENTES RECOMENDADOS**
+
+### **1. GoogleAuthButton**
+```jsx
+const GoogleAuthButton = ({ service, onSuccess, onError }) => {
+  const handleAuth = async () => {
+    try {
+      const response = await fetch(`/api/google/auth-url/${service}`, {
+        headers: { 'Authorization': `Bearer ${userToken}` }
+      });
+      const { authUrl } = await response.json();
+      window.location.href = authUrl;
+    } catch (error) {
+      onError?.(error);
+    }
+  };
+
+  return (
+    <button onClick={handleAuth}>
+      Conectar con Google {service}
+    </button>
+  );
+};
+```
+
+### **2. GoogleConnectionStatus**
+```jsx
+const GoogleConnectionStatus = ({ service }) => {
+  const [connected, setConnected] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        const response = await fetch(`/api/google/status/${service}`, {
+          headers: { 'Authorization': `Bearer ${userToken}` }
+        });
+        const status = await response.json();
+        setConnected(status.connected);
+      } catch (error) {
+        console.error('Error checking connection:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkConnection();
+  }, [service]);
+
+  if (loading) return <div>Verificando conexión...</div>;
+
+  return (
+    <div>
+      {connected ? (
+        <span className="text-green-600">✅ Conectado</span>
+      ) : (
+        <span className="text-red-600">❌ No conectado</span>
+      )}
+    </div>
+  );
+};
+```
+
+### **3. GoogleClassroomIntegration**
+```jsx
+const GoogleClassroomIntegration = ({ classId }) => {
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const loadCourses = async () => {
+    setLoading(true);
+    try {
+      const courses = await getGoogleCourses();
+      setCourses(courses);
+    } catch (error) {
+      console.error('Error loading courses:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const syncClass = async () => {
+    try {
+      await syncClassWithGoogle(classId);
+      alert('Clase sincronizada exitosamente');
+    } catch (error) {
+      alert('Error al sincronizar clase');
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={loadCourses} disabled={loading}>
+        {loading ? 'Cargando...' : 'Cargar Cursos'}
+      </button>
+      <button onClick={syncClass}>
+        Sincronizar Clase
+      </button>
+      {/* Mostrar cursos */}
+    </div>
+  );
+};
+```
+
+---
+
+## 🔄 **FLUJO COMPLETO DE INTEGRACIÓN**
+
+1. **Usuario hace clic en "Conectar con Google Classroom"**
+2. **Frontend llama a** `GET /api/google/auth-url/classroom`
+3. **Usuario es redirigido** a Google para autorizar
+4. **Google redirige** a `GET /api/google/callback`
+5. **Backend procesa** el código y guarda tokens
+6. **Backend redirige** a `https://happytribe.vercel.app/google-classroom?success=true`
+7. **Frontend detecta** el éxito y actualiza la UI
+8. **Usuario puede usar** todas las funciones de Google Classroom
+
+---
+
+## ⚠️ **CONSIDERACIONES IMPORTANTES**
+
+1. **Refresh Automático**: El backend maneja automáticamente la renovación de tokens
+2. **Múltiples Servicios**: Un usuario puede conectarse a varios servicios de Google
+3. **Estado Persistente**: Los tokens se guardan en la base de datos
+4. **Manejo de Errores**: Siempre verificar el estado de conexión antes de usar APIs
+5. **Scopes**: Cada servicio tiene sus propios permisos específicos
+
+---
+
+## 🚀 **PRÓXIMOS PASOS**
+
+1. **Implementar componentes** de autenticación
+2. **Agregar manejo** de callbacks
+3. **Integrar** con la UI existente
+4. **Probar** flujo completo
+5. **Manejar** estados de error y reconexión

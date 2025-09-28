@@ -36,20 +36,16 @@ import { WhatsApp } from './pages/dashboard/WhatsApp';
 import { Todo } from './pages/dashboard/Todo';
 import { Exams } from './pages/dashboard/Exams';
 import { Quiz } from './pages/dashboard/Quiz';
+import GoogleClassroom from './pages/dashboard/GoogleClassroom';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Layout wrapper component
 const DashboardLayoutWrapper: React.FC = () => {
   const { user } = useAuthStore();
 
-  console.log('🏠 DashboardLayoutWrapper - Usuario actual:', user);
-
   if (!user) {
-    console.log('❌ No hay usuario, redirigiendo a login');
     return <Navigate to="/login" replace />;
   }
-
-  console.log('✅ Usuario encontrado, rol:', user.role);
 
   try {
     const LayoutComponent = {
@@ -59,12 +55,9 @@ const DashboardLayoutWrapper: React.FC = () => {
     }[user.role];
 
     if (!LayoutComponent) {
-      console.error('❌ Layout no encontrado para rol:', user.role);
-      alert(`ERROR: Layout no encontrado para rol: ${user.role}`);
       return <Navigate to="/login" replace />;
     }
 
-    console.log('🎯 Renderizando layout para rol:', user.role);
     return <LayoutComponent />;
   } catch (error) {
     console.error('❌ Error renderizando layout:', error);
@@ -316,6 +309,14 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <Quiz />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="google-classroom" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <GoogleClassroom />
                 </ProtectedRoute>
               } 
             />

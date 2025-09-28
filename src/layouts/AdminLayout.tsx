@@ -28,9 +28,9 @@ export const AdminLayout: React.FC = () => {
     { to: '/dashboard/exams', icon: FileCheck, label: 'Exámenes' },
     { to: '/dashboard/quiz', icon: HelpCircle, label: 'Cuestionarios' },
     { to: '/dashboard/google-classroom', icon: GraduationCap, label: 'Google Classroom' },
-    { to: '/dashboard/studentclasses', icon: UserPlus, label: 'Inscripciones' },
-    { to: '/dashboard/reports', icon: BarChart3, label: 'Reportes' },
-    { to: '/dashboard/settings', icon: Settings, label: 'Configuración' },
+    // { to: '/dashboard/studentclasses', icon: UserPlus, label: 'Inscripciones' }, // Oculto temporalmente
+    // { to: '/dashboard/reports', icon: BarChart3, label: 'Reportes' }, // Oculto temporalmente
+    // { to: '/dashboard/settings', icon: Settings, label: 'Configuración' }, // Oculto temporalmente
     { to: '/dashboard/profile', icon: User, label: 'Perfil' }
   ];
 

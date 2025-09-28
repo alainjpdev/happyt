@@ -68,9 +68,9 @@ export const StudentLayout: React.FC = () => {
                     {user?.firstName} {user?.lastName}
                   </p>
                   <p className="text-xs text-text-secondary capitalize">
-                    {user?.role === 'user' ? 'Usuario' : 
-                     user?.role === 'coordinator' ? 'Coordinador' : 
-                     user?.role === 'admin' ? 'Administrador' : user?.role}
+                    {user?.role === 'admin' ? 'Administrador' : 
+                     user?.role === 'teacher' ? 'Profesor' : 
+                     user?.role === 'student' ? 'Estudiante' : user?.role}
                   </p>
                 </div>
               )}

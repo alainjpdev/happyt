@@ -33,12 +33,21 @@ const Modules: React.FC = () => {
             const usersResponse = await apiClient.get('/api/users');
             console.log('👥 Usuarios cargados:', usersResponse.data);
             
+            // El backend devuelve un objeto con users array
+            const usersArray = usersResponse.data.users || usersResponse.data;
+            console.log('👥 Array de usuarios:', usersArray);
+            console.log('👥 Es array?', Array.isArray(usersArray));
+            
             const creatorsMap: {[key: string]: any} = {};
-            usersResponse.data?.forEach((user: any) => {
-              if (uniqueCreatorIds.includes(user.id)) {
-                creatorsMap[user.id] = user;
-              }
-            });
+            if (Array.isArray(usersArray)) {
+              usersArray.forEach((user: any) => {
+                if (uniqueCreatorIds.includes(user.id)) {
+                  creatorsMap[user.id] = user;
+                }
+              });
+            } else {
+              console.error('❌ Error: usersResponse.data no es un array:', usersResponse.data);
+            }
             
             console.log('👥 Mapa de creadores:', creatorsMap);
             setCreators(creatorsMap);
