@@ -34,13 +34,13 @@ export const getEnvironmentConfig = (): EnvironmentConfig => {
     backendURL = import.meta.env.VITE_API_URL;
   } else if (isProduction) {
     // Producción - usar Heroku
-    backendURL = 'https://colorland-app-ff3fdd79ac35.herokuapp.com';
+    backendURL = 'https://happytribe-backend-08a2fb6f96ac.herokuapp.com';
   } else if (isDevelopment) {
     // Desarrollo - usar localhost
     backendURL = 'http://localhost:3000';
   } else {
     // Fallback a producción
-    backendURL = 'https://colorland-app-ff3fdd79ac35.herokuapp.com';
+    backendURL = 'https://happytribe-backend-08a2fb6f96ac.herokuapp.com';
   }
   
   // Configuración del frontend

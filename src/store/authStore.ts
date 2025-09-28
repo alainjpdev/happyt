@@ -27,10 +27,19 @@ export const useAuthStore = create<AuthState>()(
 
       register: async (userData: RegisterData) => {
         try {
+          console.log('🔄 Registrando usuario en el store:', { email: userData.email, role: userData.role });
           const { user, token } = await authAPI.register(userData);
+          console.log('✅ Registro exitoso:', { user: user?.email, role: user?.role, tokenLength: token?.length });
           set({ user, token, isAuthenticated: true });
-        } catch (error) {
-          throw new Error('Error al registrar usuario');
+        } catch (error: any) {
+          console.error('❌ Error en registro del store:', error);
+          console.error('❌ Detalles del error:', {
+            status: error.response?.status,
+            statusText: error.response?.statusText,
+            data: error.response?.data,
+            message: error.message
+          });
+          throw error; // Re-lanzar el error original para que el componente pueda manejarlo
         }
       },
 

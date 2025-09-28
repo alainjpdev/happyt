@@ -19,11 +19,26 @@ export const Register = () => {
         setError('');
         try {
             const { confirmPassword, ...userData } = data;
-            await registerUser({ ...userData, role: 'user' }); // Forzar rol user
+            console.log('🔄 Intentando registrar usuario:', { ...userData, role: 'student' });
+            await registerUser({ ...userData, role: 'student' }); // Enviar rol student
+            console.log('✅ Usuario registrado exitosamente');
             navigate('/dashboard');
         }
         catch (err: any) {
-            setError(err.message || 'Error al registrar usuario');
+            console.error('❌ Error en registro:', err);
+            let errorMessage = 'Error al registrar estudiante';
+            
+            if (err.response?.status === 500) {
+                errorMessage = 'El servidor está experimentando problemas. Por favor, contacta al administrador o intenta más tarde.';
+            } else if (err.response?.status === 400) {
+                errorMessage = 'Datos inválidos. Verifica que todos los campos estén correctos.';
+            } else if (err.response?.status === 409) {
+                errorMessage = 'El correo electrónico ya está registrado.';
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+            
+            setError(errorMessage);
         }
         finally {
             setIsLoading(false);
@@ -36,14 +51,40 @@ export const Register = () => {
           <div className="flex items-center justify-center mb-4">
             <img src={logohappy} alt="Happy Tribe Logo" className="h-12 w-auto" />
           </div>
-          <p className="text-brand-brown mt-2">Crea tu cuenta</p>
+          <p className="text-brand-brown mt-2">Regístrate como Estudiante</p>
         </div>
 
         {/* Form */}
         <div className="bg-white rounded-lg shadow-lg p-8 border border-gray-200">
-          {error && (            <div className="mb-4 p-3 bg-error/10 border border-error text-error rounded-lg">
-              Error al registrar usuario
-            </div>)}
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">
+                    Error al registrar estudiante
+                  </h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <p>{error}</p>
+                  </div>
+                  {error.includes('servidor está experimentando problemas') && (
+                    <div className="mt-3">
+                      <a 
+                        href="mailto:admin@happytribe.com?subject=Error de Registro&body=Hola, estoy experimentando un error al intentar registrarme en Happy Tribe. ¿Podrían ayudarme?"
+                        className="text-sm font-medium text-red-600 hover:text-red-500 underline"
+                      >
+                        📧 Contactar al Administrador
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
@@ -135,6 +176,38 @@ export const Register = () => {
             <Button type="submit" disabled={isLoading} className="w-full" size="lg">
               {isLoading ? 'Registrando...' : 'Registrarse'}
             </Button>
+            
+            {/* Botón temporal para crear usuario de prueba */}
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-700 mb-2">
+                <strong>⚠️ Problema temporal:</strong> El servidor de registro está experimentando problemas.
+              </p>
+              <p className="text-sm text-yellow-600 mb-3">
+                Mientras tanto, puedes usar estas credenciales de prueba:
+              </p>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="font-medium">Admin:</span>
+                  <span>admin@happytribe.com / password123</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-medium">Estudiante:</span>
+                  <span>student@algorithmics.com / password123</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-medium">Profesor:</span>
+                  <span>teacher@algorithmics.com / password123</span>
+                </div>
+              </div>
+              <div className="mt-3">
+                <Link 
+                  to="/login" 
+                  className="text-sm font-medium text-yellow-600 hover:text-yellow-500 underline"
+                >
+                  🔑 Ir al Login
+                </Link>
+              </div>
+            </div>
           </form>
 
           <div className="mt-6 text-center">
