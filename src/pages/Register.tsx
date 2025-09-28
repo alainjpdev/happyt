@@ -188,15 +188,15 @@ export const Register = () => {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="font-medium">Admin:</span>
-                  <span>admin@happytribe.com / password123</span>
+                  <span>admin@happytribe.com / [Contraseña oculta por seguridad]</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Estudiante:</span>
-                  <span>student@algorithmics.com / password123</span>
+                  <span>student@algorithmics.com / [Contraseña oculta]</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Profesor:</span>
-                  <span>teacher@algorithmics.com / password123</span>
+                  <span>teacher@algorithmics.com / [Contraseña oculta]</span>
                 </div>
               </div>
               <div className="mt-3">

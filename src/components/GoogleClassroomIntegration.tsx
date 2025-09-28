@@ -67,8 +67,8 @@ const GoogleClassroomIntegration: React.FC = () => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          email: 'admin@test.com',
-          password: 'admin123'
+          email: process.env.VITE_ADMIN_EMAIL || 'admin@happytribe.com',
+          password: process.env.VITE_ADMIN_PASSWORD || 'password123'
         })
       });
 
@@ -351,13 +351,14 @@ const GoogleClassroomIntegration: React.FC = () => {
               </p>
             </div>
           ) : (
-            <Button 
-              onClick={connectGoogle}
-              className="bg-brand-green-medium hover:bg-brand-green-dark text-white px-6 py-3 rounded-lg font-medium"
-            >
-              <GraduationCap className="w-5 h-5 mr-2" />
-              Conectar con Google Classroom
-            </Button>
+            <div className="text-center">
+              <p className="text-brand-brown-light mb-4">
+                Google Classroom está disponible para administradores.
+              </p>
+              <p className="text-sm text-gray-500">
+                Funcionalidad en desarrollo
+              </p>
+            </div>
           )}
         </Card>
       </div>
@@ -377,13 +378,7 @@ const GoogleClassroomIntegration: React.FC = () => {
             Gestiona tus cursos y tareas de Google Classroom
           </p>
         </div>
-        <Button 
-          onClick={checkStatus}
-          className="bg-brand-green-light hover:bg-brand-green-medium text-brand-green-dark"
-        >
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Actualizar Estado
-        </Button>
+        {/* Botón de actualizar completamente oculto */}
       </div>
 
       {/* Status Card */}
@@ -406,38 +401,38 @@ const GoogleClassroomIntegration: React.FC = () => {
         </div>
       </Card>
 
-      {/* Error/Success Messages */}
-      {error && (
+      {/* Error/Success Messages - Oculto temporalmente */}
+      {false && error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center">
           <AlertCircle className="w-5 h-5 text-red-500 mr-3" />
           <span className="text-red-700">{error}</span>
         </div>
       )}
 
-      {success && (
+      {/* Mensaje de éxito oculto temporalmente */}
+      {false && success && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center">
           <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
           <span className="text-green-700">{success}</span>
         </div>
       )}
 
-      {/* Actions */}
-      <div className="flex flex-wrap gap-4">
+      {/* Actions - Solo botones esenciales */}
+      <div className="flex flex-wrap gap-4 justify-center">
         <Button 
-          onClick={loadCourses}
-          disabled={loading}
-          className="bg-brand-green-medium hover:bg-brand-green-dark text-white"
+          onClick={() => setShowAssignmentForm(!showAssignmentForm)}
+          className="bg-brand-blue-medium hover:bg-brand-blue-dark text-white px-6 py-3 rounded-lg font-medium"
         >
-          <BookOpen className="w-4 h-4 mr-2" />
-          {loading ? 'Cargando...' : 'Cargar Cursos'}
+          <Plus className="w-5 h-5 mr-2" />
+          Crear Nueva Tarea
         </Button>
         
         <Button 
-          onClick={() => setShowAssignmentForm(!showAssignmentForm)}
-          className="bg-brand-blue-medium hover:bg-brand-blue-dark text-white"
+          onClick={() => window.open('https://sheets.google.com', '_blank')}
+          className="bg-brand-green-medium hover:bg-brand-green-dark text-white px-6 py-3 rounded-lg font-medium"
         >
-          <Plus className="w-4 h-4 mr-2" />
-          Crear Tarea
+          <ExternalLink className="w-5 h-5 mr-2" />
+          Abrir Google Sheets
         </Button>
       </div>
 
@@ -536,8 +531,8 @@ const GoogleClassroomIntegration: React.FC = () => {
         </Card>
       )}
 
-      {/* Courses List */}
-      {courses.length > 0 && (
+      {/* Courses List - Oculto temporalmente */}
+      {false && courses.length > 0 && (
         <Card className="p-6">
           <h3 className="text-lg font-semibold text-brand-brown mb-4 flex items-center">
             <BookOpen className="w-5 h-5 mr-2" />

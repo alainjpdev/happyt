@@ -8,7 +8,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useToast } from '../../components/ui/Toast';
 import { getGoogleRedirectURI } from '../../config/environment';
 import { useGoogleAuth } from '../../hooks/useGoogleAuth';
-import { GoogleAuthTest } from '../../components/GoogleAuthTest';
+// import { GoogleAuthTest } from '../../components/GoogleAuthTest'; // Removido temporalmente
 
 interface TodoItem {
   id: string;
@@ -1563,14 +1563,17 @@ export const Todo: React.FC = () => {
               Para poder gestionar tareas y modificar datos en Google Sheets, 
               necesitas autorizar la aplicación con tu cuenta de Google.
             </p>
-            <Button 
-              onClick={authenticateWithGoogle} 
-              className="bg-blue-600 text-white hover:bg-blue-700 px-6 py-3"
-              disabled={!GOOGLE_CLIENT_ID}
-            >
-              <CheckCircle className="w-5 h-5 mr-2" />
-              Conectar con Google
-            </Button>
+            {/* Botón Conectar con Google oculto temporalmente */}
+            {false && (
+              <Button 
+                onClick={authenticateWithGoogle} 
+                className="bg-blue-600 text-white hover:bg-blue-700 px-6 py-3"
+                disabled={!GOOGLE_CLIENT_ID}
+              >
+                <CheckCircle className="w-5 h-5 mr-2" />
+                Conectar con Google
+              </Button>
+            )}
             {!GOOGLE_CLIENT_ID && (
               <p className="text-sm text-red-600 mt-2">
                 Error: GOOGLE_CLIENT_ID no está configurado
@@ -1603,27 +1606,34 @@ export const Todo: React.FC = () => {
                 <CheckCircle className="w-5 h-5 mr-2 text-brand-green-dark" />
                 <span className="font-semibold">📊 Abrir Google Sheet</span>
               </Button>
-              <Button 
-                onClick={refreshWithDebounce} 
-                variant="outline"
-                disabled={isRefreshing}
-                className="font-medium"
-              >
-                <RefreshCw className={`w-5 h-5 mr-2 text-gray-600 ${isRefreshing ? 'animate-spin' : ''}`} />
-                <span className="font-semibold">
-                  {isRefreshing ? 'Actualizando...' : '🔄 Actualizar'}
-                </span>
-              </Button>
-              <Button 
-                onClick={diagnoseGoogleSheetsAccess} 
-                variant="outline"
-                className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-300 hover:border-blue-400 transition-colors font-medium"
-                title="Verificar configuración de Google Sheets y OAuth2"
-              >
-                <AlertCircle className="w-5 h-5 mr-2 text-blue-600" />
-                <span className="font-semibold">🔍 Diagnosticar</span>
-              </Button>
-              {googleAccessToken && (
+              {/* Botón Actualizar oculto temporalmente */}
+              {false && (
+                <Button 
+                  onClick={refreshWithDebounce} 
+                  variant="outline"
+                  disabled={isRefreshing}
+                  className="font-medium"
+                >
+                  <RefreshCw className={`w-5 h-5 mr-2 text-gray-600 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  <span className="font-semibold">
+                    {isRefreshing ? 'Actualizando...' : '🔄 Actualizar'}
+                  </span>
+                </Button>
+              )}
+              {/* Botón Diagnosticar oculto temporalmente */}
+              {false && (
+                <Button 
+                  onClick={diagnoseGoogleSheetsAccess} 
+                  variant="outline"
+                  className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-300 hover:border-blue-400 transition-colors font-medium"
+                  title="Verificar configuración de Google Sheets y OAuth2"
+                >
+                  <AlertCircle className="w-5 h-5 mr-2 text-blue-600" />
+                  <span className="font-semibold">🔍 Diagnosticar</span>
+                </Button>
+              )}
+              {/* Botón Verificar Permisos oculto temporalmente */}
+              {false && googleAccessToken && (
                 <Button 
                   onClick={checkSheetPermissions} 
                   variant="outline"
@@ -1647,7 +1657,8 @@ export const Todo: React.FC = () => {
                   </span>
                 </Button>
               )}
-              {!googleAccessToken && GOOGLE_CLIENT_ID && (
+              {/* Botón Conectar con Google oculto temporalmente */}
+              {false && !googleAccessToken && GOOGLE_CLIENT_ID && (
                 <Button 
                   onClick={authenticateWithGoogle} 
                   variant="outline"
@@ -1681,6 +1692,16 @@ export const Todo: React.FC = () => {
         </div>
       </div>
 
+      {/* Banner En Desarrollo */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center">
+        <AlertCircle className="w-6 h-6 text-yellow-600 mr-3" />
+        <div>
+          <h3 className="font-semibold text-yellow-800">🚧 Sección en Desarrollo</h3>
+          <p className="text-yellow-700 text-sm mt-1">
+            La integración con Google Sheets está siendo desarrollada. Pronto podrás sincronizar tus tareas automáticamente.
+          </p>
+        </div>
+      </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -1950,11 +1971,13 @@ export const Todo: React.FC = () => {
         )}
       </div>
 
-      {/* Componente de prueba de Google Auth */}
-      <div className="mt-8">
-        <h2 className="text-2xl font-bold text-text mb-4">🔐 Google Auth Test</h2>
-        <GoogleAuthTest />
-      </div>
+      {/* Componente de prueba de Google Auth - Removido temporalmente */}
+      {false && (
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold text-text mb-4">🔐 Google Auth Test</h2>
+          {/* <GoogleAuthTest /> */}
+        </div>
+      )}
 
       {/* Add Todo Modal */}
       {showAddForm && (
